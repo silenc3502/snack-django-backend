@@ -19,8 +19,8 @@ for file_path in input_files:
     df = pd.read_csv(file_path, encoding='utf-8-sig')
     
     # 'degree'와 'review num' 컬럼을 숫자로 변환 (문자열이 섞여 있을 가능성 대비)
-    df['degree'] = pd.to_numeric(df['degree'], errors='coerce')  # 변환 불가능한 값은 NaN 처리
-    df['review num'] = pd.to_numeric(df['review num'], errors='coerce')
+    df['degree'] = pd.to_numeric(df['degree'], errors='coerce').astype(float)  # 변환 불가능한 값은 NaN 처리
+    df['review num'] = pd.to_numeric(df['review num'], errors='coerce').astype('Int64')
 
     # NaN 값 제거 후 필터링 적용
     filtered_df = df.dropna(subset=['degree', 'review num'])
