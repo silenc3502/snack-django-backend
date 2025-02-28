@@ -11,7 +11,7 @@ from account_profile.service.account_profile_service_impl import AccountProfileS
 from kakao_authentication.serializer.kakao_oauth_access_token_serializer import KakaoOauthAccessTokenSerializer
 from kakao_authentication.service.kakao_oauth_service_impl import KakaoOauthServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
-
+from account.entity.role_type import RoleType
 
 class KakaoOauthController(viewsets.ViewSet):
     kakaoOauthService = KakaoOauthServiceImpl.getInstance()
@@ -39,19 +39,29 @@ class KakaoOauthController(viewsets.ViewSet):
                 userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
                 nickname = userInfo.get('properties', {}).get('nickname', '')
                 email = userInfo.get('kakao_account', {}).get('email', '')
+                account_path = "Kakao"
+                role_type = RoleType.USER
+                phone_num =""
+                add = ""
+                sex = ""
+                birth= None
+                pay = ""
+                sub = False
                 print(f"email: {email}, nickname: {nickname}")
 
                 account = self.accountService.checkEmailDuplication(email)
                 print(f"account: {account}")
 
                 if account is None:
-                    account = self.accountService.createAccount(email)
+                    account = self.accountService.createAccount(email, account_path, role_type)
                     print(f"account: {account}")
 
                     accountProfile = self.accountProfileService.createAccountProfile(
-                        account.getId(), nickname
+                        account.id, nickname, nickname, phone_num, add, sex, birth, pay, sub
                     )
                     print(f"accountProfile: {accountProfile}")
+
+                self.accountService.updateLastUsed(account.id)
 
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
                 print(f"userToken: {userToken}")

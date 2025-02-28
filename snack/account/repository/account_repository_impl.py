@@ -1,10 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
-
 from account.entity.account import Account
 from account.entity.account_role_type import AccountRoleType
 from account.entity.role_type import RoleType
 from account.repository.account_repository import AccountRepository
-
+from django.utils.timezone import now
 
 class AccountRepositoryImpl(AccountRepository):
     __instance = None
@@ -12,44 +11,41 @@ class AccountRepositoryImpl(AccountRepository):
     def __new__(cls):
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
-
         return cls.__instance
 
     @classmethod
     def getInstance(cls):
         if cls.__instance is None:
             cls.__instance = cls()
-
         return cls.__instance
 
-    def save(self, email):
-        print(f"email: {email}")
-        defaultRoleType = AccountRoleType.objects.filter(role_type=RoleType.NORMAL).first()
-
-        # 만약 기본 역할이 없다면, 새로 생성
-        if not defaultRoleType:
-            defaultRoleType = AccountRoleType(role_type=RoleType.NORMAL)
-            defaultRoleType.save()
-            print(f"Created new defaultRoleType: {defaultRoleType}")
-        else:
-            print(f"Found existing defaultRoleType: {defaultRoleType}")
-
-        print(f"defaultRoleType: {defaultRoleType}")
-
-        account = Account(email=email, role_type=defaultRoleType)
-        print(f"account: {account}")
-
+    def save(self, account: Account):
+        """새로운 계정을 저장한다."""
         account.save()
         return account
 
-    def findById(self, accountId):
+    def findById(self, account_id: int):
+        """ID로 계정을 찾는다."""
         try:
-            return Account.objects.get(id=accountId)
+            return Account.objects.get(id=account_id)
         except ObjectDoesNotExist:
-            raise ObjectDoesNotExist(f"Account ID {accountId} 존재하지 않음.")
+            return None
 
-    def findByEmail(self, email):
+    def findByEmail(self, email: str):
+        """이메일로 계정을 찾는다."""
         try:
             return Account.objects.get(email=email)
         except ObjectDoesNotExist:
-            raise ObjectDoesNotExist(f"Account {email} 존재하지 않음.")
+            return None
+
+    def updateLastUsed(self, account_id: int):
+        """로그인 시 마지막 접속 날짜를 업데이트한다."""
+        try:
+            account = Account.objects.get(id=account_id)
+            account.account_used_date = now()
+            account.save()
+            print(f"account_used_date 업데이트됨: {account.account_used_date}")
+            return account
+        except ObjectDoesNotExist:
+            print(f"계정 {account_id} 찾을 수 없음음")
+            return None

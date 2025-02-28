@@ -7,8 +7,8 @@ router = DefaultRouter()
 router.register(r"account", AccountController, basename='account')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('email',
-         AccountController.as_view({ 'post': 'requestEmail' }),
-         name='로그아웃 요청'),
+    path("", include(router.urls)),
+    path("create/", AccountController.as_view({"post": "createAccount"}), name="create-account"),
+    path("get/<str:email>/", AccountController.as_view({"get": "getAccount"}), name="get-account"),
+    path("update-last-used/<str:email>/", AccountController.as_view({"put": "updateLastUsed"}), name="update-last-used"),
 ]
