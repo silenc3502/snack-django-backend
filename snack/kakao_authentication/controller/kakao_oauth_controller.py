@@ -101,7 +101,7 @@ class KakaoOauthController(viewsets.ViewSet):
 
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:
-            userToken = str(uuid.uuid4())
+            userToken = f"kakao-{uuid.uuid4()}"
             self.redisCacheService.storeKeyValue(account.getId(), accessToken)
             self.redisCacheService.storeKeyValue(userToken, account.getId())
 
