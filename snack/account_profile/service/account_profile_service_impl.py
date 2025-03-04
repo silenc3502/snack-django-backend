@@ -19,13 +19,13 @@ class AccountProfileServiceImpl(AccountProfileService):
 
     def createAccountProfile(
         self, account_id: int, account_name: str, account_nickname: str, phone_num: str,
-        account_add: str, account_sex: str, account_birth: str, account_pay: dict, account_sub: bool
+        account_add: str, account_sex: str, account_birth: str, account_pay: dict, account_sub: bool,
     ) -> AccountProfile:
         """새로운 AccountProfile을 생성한다."""
         profile = AccountProfile(
             account_id=account_id, account_name=account_name, account_nickname=account_nickname,
             phone_num=phone_num, account_add=account_add, account_sex=account_sex,
-            account_birth=account_birth, account_pay=account_pay, account_sub=account_sub
+            account_birth=account_birth, account_pay=account_pay, account_sub=account_sub,
         )
         return self.__repository.save(profile)
 

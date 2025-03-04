@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'account',
     'account_profile',
     'authentication',
+    'google_authentication',
+    'naver_authentication',
 ]
 
 MIDDLEWARE = [
@@ -97,6 +99,15 @@ KAKAO = {
     'REDIRECT_URI': os.getenv('KAKAO_REDIRECT_URI'),
     'TOKEN_REQUEST_URI': os.getenv('KAKAO_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('KAKAO_USER_INFO_REQUEST_URI'),
+}
+
+NAVER = {
+    'LOGIN_URL': os.getenv('NAVER_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('NAVER_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('NAVER_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('NAVER_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('NAVER_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('NAVER_USER_INFO_REQUEST_URI'),
 }
 
 TOSS_PAYMENTS = {
