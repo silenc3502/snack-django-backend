@@ -8,8 +8,11 @@ router.register(r"authentication", AuthenticationController, basename='authentic
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('logout',
-         AuthenticationController.as_view({ 'post': 'requestLogout' }),
+    path('kakao-logout',
+         AuthenticationController.as_view({ 'post': 'requestKakaoLogout' }),
+         name='로그아웃 요청'),
+    path('naver-logout',
+         AuthenticationController.as_view({ 'post': 'requestNaverLogout' }),
          name='로그아웃 요청'),
     path('validation',
          AuthenticationController.as_view({ 'post': 'requestUserTokenValidation' }),

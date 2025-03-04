@@ -113,7 +113,7 @@ class NaverOauthController(viewsets.ViewSet):
     # 4. Redis를 활용한 사용자 토큰 저장
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:
-            userToken = str(uuid.uuid4())
+            userToken = f"naver-{uuid.uuid4()}"
             self.redisCacheService.storeKeyValue(account.getId(), accessToken)
             self.redisCacheService.storeKeyValue(userToken, account.getId())
 
