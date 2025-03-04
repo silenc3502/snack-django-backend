@@ -18,6 +18,7 @@ class AccountProfile(models.Model):
     account_birth = models.DateField(null=True, blank=True)  # 생년월일 (수정 불가)
     account_pay = models.JSONField(null=True, blank=True)  # 결제 정보 (수정 가능)
     account_sub = models.BooleanField(default=False)  # 구독 여부 (수정 가능)
+    account_age = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'account_profile'
@@ -32,3 +33,8 @@ class AccountProfile(models.Model):
             today = date.today()
             return today.year - self.account_birth.year - ((today.month, today.day) < (self.account_birth.month, self.account_birth.day))
         return None
+    
+    def save(self, *args, **kwargs):
+        """저장하기 전에 자동으로 account_age 값을 업데이트"""
+        self.account_age = self.get_age()  # 나이 계산 후 저장
+        super().save(*args, **kwargs)

@@ -20,6 +20,7 @@ class AccountProfileRepositoryImpl(AccountProfileRepository):
         """AccountProfile을 저장한다."""
         account_profile.save()
         return account_profile
+    
 
     def findByAccount(self, account_id: int):
         """Account ID를 이용해 AccountProfile을 찾는다."""
@@ -35,6 +36,7 @@ class AccountProfileRepositoryImpl(AccountProfileRepository):
                 "account_birth": profile.account_birth.strftime('%Y-%m-%d') if profile.account_birth else None,
                 "account_pay": profile.account_pay,
                 "account_sub": profile.account_sub,
+                "account_age": profile.account_age,
             }
         except ObjectDoesNotExist:
             return None
