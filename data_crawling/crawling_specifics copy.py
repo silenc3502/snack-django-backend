@@ -8,52 +8,62 @@ from bs4 import BeautifulSoup
 import time
 import csv
 
+# 크롬 드라이버 설정
 service = Service("/opt/homebrew/bin/chromedriver")
 options = webdriver.ChromeOptions()
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(service=service, options=options)
-driver.get('https://map.kakao.com/')
-time.sleep(2)
+# 서울시 구 리스트
+seoul_gu_list = [
+    "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
+    "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구",
+    "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"
+]
 
-search_area = driver.find_element(By.ID, 'search.keyword.query')
-search_area.send_keys('강남구 맛집')
-search_area.send_keys(Keys.ENTER)
-time.sleep(3)
+def init_driver():
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.get('https://map.kakao.com/')
+    time.sleep(2)
+    return driver
 
-def remove_dimmed_layer():
+def search_keyword(driver, keyword):
+    search_area = driver.find_element(By.ID, 'search.keyword.query')
+    search_area.clear()
+    search_area.send_keys(keyword)
+    search_area.send_keys(Keys.ENTER)
+    time.sleep(3)
+
+    remove_dimmed_layer(driver)
+    click_place_tab(driver)
+    click_place_more(driver)
+
+def remove_dimmed_layer(driver):
     try:
         dimmed_layer = driver.find_element(By.ID, 'dimmedLayer')
         driver.execute_script("arguments[0].style.display='none';", dimmed_layer)
     except:
         pass
 
-def click_place_tab():
-    remove_dimmed_layer()
+def click_place_tab(driver):
     driver.find_element(By.XPATH, '//*[@id="info.main.options"]/li[2]/a').click()
     time.sleep(2)
 
-click_place_tab()
-
-def click_place_more():
+def click_place_more(driver):
     try:
         driver.find_element(By.ID, 'info.search.place.more').click()
         time.sleep(2)
     except:
         pass
 
-click_place_more()
-
-def expand_menu_tab_and_collect():
+def expand_menu_tab_and_collect(driver):
     menu_items = []
     try:
-        # 메뉴 탭 클릭
         menu_tab = driver.find_element(By.CSS_SELECTOR, 'a[href="#menuInfo"]')
         menu_tab.click()
         time.sleep(2)
 
-        # 메뉴 더보기 버튼 계속 클릭해서 전체 메뉴 노출
+        # 메뉴 더보기 계속 클릭
         while True:
             try:
                 more_button = driver.find_element(By.CSS_SELECTOR, '.wrap_more a.link_more')
@@ -65,7 +75,6 @@ def expand_menu_tab_and_collect():
             except:
                 break
 
-        # 메뉴 목록 수집
         menu_elements = driver.find_elements(By.CSS_SELECTOR, '.list_goods > li')
         for element in menu_elements:
             name = element.find_element(By.CSS_SELECTOR, '.tit_item').text.strip()
@@ -81,77 +90,7 @@ def expand_menu_tab_and_collect():
 
     return menu_items if menu_items else ['메뉴 없음']
 
-def scroll_to_reviews():
-    try:
-        review_section = driver.find_element(By.CSS_SELECTOR, '.section_review')
-        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", review_section)
-        time.sleep(2)
-    except Exception as e:
-        print(f"❌ 리뷰 섹션 이동 실패: {e}")
-
-def get_all_reviews():
-    reviews = []
-    seen_reviews = set()
-    last_seen_review = None  # 무한루프 방지
-
-    def collect_reviews():
-        nonlocal last_seen_review
-        found_new = False
-        review_elements = driver.find_elements(By.CSS_SELECTOR, '.list_review .inner_review')
-
-        for element in review_elements:
-            try:
-                expand_btns = element.find_elements(By.CSS_SELECTOR, 'button.btn_fold')
-                for btn in expand_btns:
-                    if btn.is_displayed():
-                        btn.click()
-                        time.sleep(0.5)
-
-                review_text = element.find_element(By.CSS_SELECTOR, '.desc_review').text.strip()
-                if review_text and review_text not in seen_reviews:
-                    seen_reviews.add(review_text)
-                    reviews.append(review_text)
-                    found_new = True
-
-            except Exception as e:
-                print(f"❌ 리뷰 수집 에러: {e}")
-
-        if reviews:
-            last_seen_review = reviews[-1]
-        return found_new
-
-    scroll_to_reviews()
-    collect_reviews()
-
-    while True:
-        driver.execute_script("window.scrollBy(0, 300);")
-        time.sleep(0.5)
-
-        found_new = collect_reviews()
-
-        try:
-            more_button = driver.find_element(By.CSS_SELECTOR, '.section_review .wrap_more a.link_more')
-            if more_button.is_displayed():
-                more_button.click()
-                time.sleep(2)
-
-                new_review_elements = driver.find_elements(By.CSS_SELECTOR, '.list_review .inner_review')
-                if new_review_elements:
-                    last_review_text = new_review_elements[-1].find_element(By.CSS_SELECTOR, '.desc_review').text.strip()
-                    if last_seen_review and last_review_text == last_seen_review:
-                        print("⚠️ 더보기 눌러도 새 리뷰 없음 - 무한루프 방지 종료")
-                        break
-                continue
-        except:
-            pass
-
-        if not found_new:
-            print("✅ 새로운 리뷰 없음, 수집 종료")
-            break
-
-    return "\n".join(reviews) if reviews else "후기 없음"
-
-def get_store_details(detail_url):
+def get_store_details(driver, detail_url):
     original_window = driver.current_window_handle
 
     driver.execute_script("window.open(arguments[0]);", detail_url)
@@ -160,19 +99,15 @@ def get_store_details(detail_url):
     driver.switch_to.window(driver.window_handles[-1])
     time.sleep(2)
 
-    # 메뉴 탭 열고 모든 메뉴 수집
-    menu_list = expand_menu_tab_and_collect()
-    menu_text = ', '.join(menu_list) if menu_list else '메뉴 없음'
-
-    # 리뷰 수집
-    review_text = get_all_reviews()
+    menu_list = expand_menu_tab_and_collect(driver)
+    menu_text = ', '.join(menu_list)
 
     driver.close()
     driver.switch_to.window(original_window)
 
-    return menu_text, review_text
+    return menu_text
 
-def crawl_all_pages():
+def crawl_all_pages(driver):
     all_data = []
 
     def process_current_page():
@@ -189,10 +124,10 @@ def crawl_all_pages():
                 tel = store.select_one('.info_item .phone').text.strip() if store.select_one('.info_item .phone') else '전화번호 없음'
                 detail_url = store.select_one('.contact .moreview')['href']
 
-                menu_text, review_text = get_store_details(detail_url)
+                menu_text = get_store_details(driver, detail_url)
 
                 print(f"📍 {name} | 평점: {degree} | 리뷰 {review_count}개 수집 완료")
-                all_data.append([name, degree, review_count, address, tel, menu_text, review_text])
+                all_data.append([name, degree, review_count, address, tel, menu_text])
 
             except Exception as e:
                 print(f"❌ 매장 크롤링 실패: {e}")
@@ -211,13 +146,27 @@ def crawl_all_pages():
             print("❌ 다음 버튼 클릭 실패, 크롤링 종료")
             break
 
-    with open('강남구_맛집_전체크롤링.csv', 'w', encoding='utf-8-sig', newline='') as f:
+    return all_data
+
+def save_to_csv(gu_name, data):
+    filename = f'{gu_name}_맛집_크롤링.csv'
+    with open(filename, 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['이름', '평점', '리뷰수', '주소', '전화번호', '메뉴', '리뷰'])
-        writer.writerows(all_data)
+        writer.writerow(['이름', '평점', '리뷰수', '주소', '전화번호', '메뉴'])
+        writer.writerows(data)
+    print(f"✅ {gu_name} 저장 완료 ({filename})")
 
-    print("✅ 전체 크롤링 완료 및 저장 완료")
+def crawl_seoul_gu():
+    for gu in seoul_gu_list:
+        print(f"🔹 {gu} 크롤링 시작!")
+        driver = init_driver()
+        search_keyword(driver, f'{gu} 맛집')
 
-print("🔹 크롤링 시작!")
-crawl_all_pages()
-driver.quit()
+        all_data = crawl_all_pages(driver)
+        save_to_csv(gu, all_data)
+
+        driver.quit()
+        print(f"✅ {gu} 크롤링 및 저장 완료\n")
+
+if __name__ == '__main__':
+    crawl_seoul_gu()
