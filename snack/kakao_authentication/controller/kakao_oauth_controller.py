@@ -75,6 +75,15 @@ class KakaoOauthController(viewsets.ViewSet):
         access_token = request.data.get('access_token')  # 클라이언트에서 받은 access_token
         email = request.data.get('email')  # 클라이언트에서 받은 email
         nickname = request.data.get('nickname')  # 클라이언트에서 받은 nickname
+        account_path = "Kakao"
+        role_type = RoleType.USER
+        phone_num =""
+        add = ""
+        sex = ""
+        birth= None
+        pay = ""
+        sub = False
+
 
         if not access_token:
             return JsonResponse({'error': 'Access token is required'}, status=400)
@@ -85,12 +94,19 @@ class KakaoOauthController(viewsets.ViewSet):
         try:
             # 이메일을 기반으로 계정을 찾거나 새로 생성합니다.
             account = self.accountService.checkEmailDuplication(email)
+            print(account)
             if account is None:
-                account = self.accountService.createAccount(email)
+                account = self.accountService.createAccount(email, account_path, role_type)
                 accountProfile = self.accountProfileService.createAccountProfile(
-                    account.getId(), nickname
-                )
+                        account.id, nickname, nickname, phone_num, add, sex, birth, pay, sub
+                    )
+            
+            account_id = account.getId()
+            print(account_id)
+            account.update_last_used()
+            account = self.accountService.findAccountById(account_id)
 
+            print(account)
             # 사용자 토큰 생성 및 Redis에 저장
             userToken = self.__createUserTokenWithAccessToken(account, access_token)
 
