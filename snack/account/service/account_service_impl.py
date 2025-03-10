@@ -33,10 +33,10 @@ class AccountServiceImpl(AccountService):
 
     def checkEmailDuplication(self, email: str) -> bool:
         """이메일 중복 확인"""
-        try:
-            return self.__accountRepository.findByEmail(email) 
-        except ObjectDoesNotExist:
-            return None
+        account = self.__accountRepository.findByEmail(email)
+        if account:
+            return account
+        return None
 
     def findAccountById(self, account_id: int) -> Account:
         """Account ID로 계정을 찾는다."""
@@ -50,3 +50,14 @@ class AccountServiceImpl(AccountService):
         else:
             print(f"계정 {account_id}를 찾을 수 없음")
         return updated_account
+    
+    def checkAccountPath(self, email: str, login_path: str):
+        """가입된 경로와 로그인 시도 경로가 다르면 충돌 발생"""
+        existing_account = self.__accountRepository.findByEmail(email)
+        
+        print(f"🔍 checkAccountPath() - email: {email}, login_path: {login_path}")
+        print(f"⚡ 기존 가입된 account_path: {existing_account.account_path if existing_account else 'None'}")
+
+        if existing_account and existing_account.account_path != login_path:
+            return f"이미 {existing_account.account_path}로 가입된 이메일입니다. {login_path}로 로그인할 수 없습니다."
+        return None

@@ -34,7 +34,8 @@ class AccountRepositoryImpl(AccountRepository):
     def findByEmail(self, email: str):
         """이메일로 계정을 찾는다."""
         try:
-            return Account.objects.get(email=email)
+            account = Account.objects.get(email=email)
+            return account
         except ObjectDoesNotExist:
             return None
 
@@ -48,4 +49,11 @@ class AccountRepositoryImpl(AccountRepository):
             return account
         except ObjectDoesNotExist:
             print(f"계정 {account_id} 찾을 수 없음음")
+            return None
+
+    def findAccountPath(self, email: str):
+        try:
+            account = Account.objects.get(email=email)
+            return account.account_path
+        except ObjectDoesNotExist:
             return None

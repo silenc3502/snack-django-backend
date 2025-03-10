@@ -61,6 +61,10 @@ class NaverOauthController(viewsets.ViewSet):
                         birth = None
                     
                 print(birth)
+
+                conflict_message = self.accountService.checkAccountPath(email, account_path)
+                if conflict_message:
+                    return JsonResponse({'success': False, 'error_message': conflict_message}, status = 200)
                 # 기존 계정 확인
                 account = self.accountService.checkEmailDuplication(email)
 
@@ -91,24 +95,66 @@ class NaverOauthController(viewsets.ViewSet):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
         nickname = request.data.get('nickname')
+        account_path = "Naver"
+        role_type = RoleType.USER
 
-        if not access_token or not email or not nickname:
-            return JsonResponse({'error': 'Access token, email, and nickname are required'}, status=400)
+        phone_num = request.data.get('phone_num', "")
+        address = request.data.get('address', "")
+        gender = request.data.get('gender', "")
+        birthyear = request.data.get('birthyear', "")
+        birthday = request.data.get('birthday', "")
+        payment = request.data.get('payment', "")
+        subscribed = request.data.get('subscribed', False)
+
+        # 생년월일 데이터 변환
+        birth = None
+        if birthday and birthyear:
+            birth = f"{birthyear}-{birthday}"
+            try:
+                birth = datetime.strptime(birth, "%Y-%m-%d").date()
+            except ValueError:
+                birth = None
+
+        if not access_token:
+            return JsonResponse({'error': 'Access token is required'}, status=400)
+
+        if not email or not nickname:
+            return JsonResponse({'error': 'Email and nickname are required'}, status=400)
 
         try:
-            account = self.accountService.checkEmailDuplication(email)
-            if account is None:
-                account = self.accountService.createAccount(email)
-                accountProfile = self.accountProfileService.createAccountProfile(
-                    account.getId(), nickname
-                )
+            # 🔹 가입된 OAuth 경로 충돌 체크
+            conflict_message = self.accountService.checkAccountPath(email, account_path)
+            if conflict_message:
+                return JsonResponse({'success': False, 'error_message': conflict_message}, status = 200)
 
-            userToken = self.__createUserTokenWithAccessToken(account, access_token)
+            with transaction.atomic():  # 🔥 Atomic 트랜잭션 시작
+                # 🔹 이메일 중복 검사
+                account = self.accountService.checkEmailDuplication(email)
+                print(f"account: {account}")
+
+                if account is None:
+                    # 🔹 새 계정 생성
+                    account = self.accountService.createAccount(email, account_path, role_type)
+                    print(f"account created: {account}")
+
+                    # 🔹 새 계정 프로필 생성
+                    accountProfile = self.accountProfileService.createAccountProfile(
+                        account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed
+                    )
+                    print(f"accountProfile: {accountProfile}")
+
+                # 🔹 마지막 로그인 시간 업데이트
+                self.accountService.updateLastUsed(account.id)
+
+                # 🔹 사용자 토큰 생성 및 Redis 저장
+                userToken = self.__createUserTokenWithAccessToken(account, access_token)
+                print(f"userToken: {userToken}")
 
             return JsonResponse({'userToken': userToken})
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
 
     # 4. Redis를 활용한 사용자 토큰 저장
     def __createUserTokenWithAccessToken(self, account, accessToken):

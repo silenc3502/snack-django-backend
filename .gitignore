@@ -1,1 +1,7 @@
 djangoenv/
+.venv
+.venv/
+.idea
+.idea/
+debug_kakao_page.html
+.DS_Store
