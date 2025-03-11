@@ -52,7 +52,7 @@ class KakaoOauthController(viewsets.ViewSet):
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
                 if conflict_message:
                     print(f"🚨 충돌 발생: {conflict_message}")
-                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=200)
+                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=210)
 
                 account = self.accountService.checkEmailDuplication(email)
                 print(f"account: {account}")

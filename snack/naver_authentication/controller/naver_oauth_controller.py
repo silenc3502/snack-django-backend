@@ -64,7 +64,7 @@ class NaverOauthController(viewsets.ViewSet):
 
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
                 if conflict_message:
-                    return JsonResponse({'success': False, 'error_message': conflict_message}, status = 200)
+                    return JsonResponse({'success': False, 'error_message': conflict_message}, status = 210)
                 # 기존 계정 확인
                 account = self.accountService.checkEmailDuplication(email)
 
@@ -84,7 +84,9 @@ class NaverOauthController(viewsets.ViewSet):
 
                 # 사용자 토큰 생성 및 Redis 저장
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
-
+                print(userToken)
+                abcToken = self.redisCacheService.storeKeyValue(account.email, account.id)
+                print(abcToken)
             return JsonResponse({'userToken': userToken})
 
         except Exception as e:
