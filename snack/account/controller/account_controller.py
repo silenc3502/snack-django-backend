@@ -70,3 +70,35 @@ class AccountController(viewsets.ViewSet):
             "last_used_date": updated_account.account_used_date.strftime('%Y-%m-%d %H:%M:%S'),
             "success": True
         }, status=status.HTTP_200_OK)
+
+
+    def requestEmail(self, request):
+        """Nuxt의 이메일 요청 처리하고 반환"""
+        postRequest = request.data
+        userToken = postRequest.get("userToken")
+
+        # userToken이 없으면 400 오류 반환
+        if not userToken:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+
+            account_id = self.redisCacheService.getValueByKey(userToken)
+
+            if not account_id:
+
+                return JsonResponse({"error": "해당 account_id가 없습니다", "success": False},status=status.HTTP_404_NOT_FOUND)
+
+            foundEmail = self.__accountService.findEmail(account_id)
+
+            if foundEmail is None:
+                # 이메일 못찾음
+                return JsonResponse({"error": "이메일을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+            # 이메일 찾음
+            return JsonResponse({"email": foundEmail, "success": True}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+
+            print(f"서버 오류 발생: {e}")
+            return JsonResponse({"error": "서버 내부 오류", "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
