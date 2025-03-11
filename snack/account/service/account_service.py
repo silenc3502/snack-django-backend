@@ -21,3 +21,8 @@ class AccountService(ABC):
     def updateLastUsed(self, account_id: int):
         """로그인 시 마지막 접속 날짜를 업데이트한다."""
         pass
+
+    @abstractmethod
+    def findEmail(self, account_id):
+        """Account ID로 이메일을 찾는다."""
+        pass
