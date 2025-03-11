@@ -61,3 +61,13 @@ class AccountServiceImpl(AccountService):
         if existing_account and existing_account.account_path != login_path:
             return f"이미 {existing_account.account_path}로 가입된 이메일입니다. {login_path}로 로그인할 수 없습니다."
         return None
+
+    def findEmail(self, account_id: int):
+        try:
+            account = self.__accountRepository.findById(account_id)
+            if account:
+                return account.getEmail()
+            return None
+
+        except ObjectDoesNotExist:
+            return None
