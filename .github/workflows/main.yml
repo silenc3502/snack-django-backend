@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  DOCKER_IMAGE: ghcr.io/${{ secrets.REAL_ACTOR }}/backend-deploy-server:latest
+  DOCKER_IMAGE: ghcr.io/${{ secrets.GITHUB_ACTOR }}/backend-deploy-server:latest
 
 jobs:
   build:
