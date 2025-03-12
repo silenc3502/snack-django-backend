@@ -13,7 +13,7 @@ class Command(BaseCommand):
             # ✅ 데이터 저장 (이미 존재하는 경우 중복 방지)
             name = row["name"]
             latitude = None if pd.isna(row["latitude"]) else row["latitude"]
-            longitude = None if pd.isna(row["longitude"]) else row["longitude"]
+            longitude = None if pd.isna(row["longitukode"]) else row["longitude"]
             address = row["address"]
 
             # ✅ 데이터 저장 (이미 존재하는 경우 중복 방지)

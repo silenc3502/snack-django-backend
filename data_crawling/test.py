@@ -1,118 +1,214 @@
-import time
-import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import time
+import csv
+import requests
+from datetime import datetime
 
-# 크롬 드라이버 경로
-CHROME_DRIVER_PATH = "/path/to/your/chromedriver"  # 본인 환경에 맞게 수정
-
-# WebDriver 옵션 설정
+# 크롬 드라이버 설정
+service = Service("/opt/homebrew/bin/chromedriver")
 options = webdriver.ChromeOptions()
-options.add_argument("--headless=new")  # 필요시 headless 모드
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-service = Service(CHROME_DRIVER_PATH)
-driver = webdriver.Chrome(service=service, options=options)
+# 카카오 주소 검색 API 키 (필수 입력)
+KAKAO_API_KEY = '6d9dc3df95f90cbe474e8b518e13f2f2'
 
-# 페이지 로드 대기 함수
-def wait_for_element(driver, by, value, timeout=10):
-    try:
-        return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value)))
-    except:
-        return None
+# 서울시 구 리스트
+seoul_gu_list = [
+    "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
+    "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구",
+    "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"
+]
 
-# 안전한 텍스트 추출 함수
-def safe_get_text(element):
-    return element.text.strip() if element else ""
+# 좌표 변환 함수
+def get_lat_lon(address):
+    url = "https://dapi.kakao.com/v2/local/search/address.json"
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    params = {"query": address}
+    response = requests.get(url, headers=headers, params=params)
 
-# 매장 상세 정보 크롤링 함수
-def crawl_store_info(store_url):
-    driver.get(store_url)
+    if response.status_code == 200:
+        result = response.json().get('documents', [])
+        if result:
+            return result[0]['y'], result[0]['x']
+    return None, None
+
+# 크롬 드라이버 초기화
+def init_driver():
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.get('https://map.kakao.com/')
     time.sleep(2)
+    return driver
 
-    if not driver.current_url.startswith("https://place.map.kakao.com/"):
-        print(f"❌ 잘못된 상세페이지: {driver.current_url}")
-        return None
+# 검색어 입력 및 검색 실행
+def search_keyword(driver, keyword):
+    search_area = driver.find_element(By.ID, 'search.keyword.query')
+    search_area.clear()
+    search_area.send_keys(keyword)
+    search_area.send_keys(Keys.ENTER)
+    time.sleep(3)
 
-    store_name_element = wait_for_element(driver, By.CSS_SELECTOR, "h3.tit_place", timeout=5)
-    if store_name_element is None:
-        print(f"❌ 상세페이지 로드 실패: {store_url}")
-        return None
+    remove_dimmed_layer(driver)
+    click_place_tab(driver)
+    click_place_more(driver)
 
-    store_info = {
-        "상호명": safe_get_text(store_name_element),
-        "카테고리": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".info_cate")),
-        "주소": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".txt_detail")),
-        "전화번호": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".info_suggest .txt_detail")),
-        "별점": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".num_star")),
-        "리뷰수": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".link_review .info_num")),
-        "영업시간": safe_get_text(driver.find_element(By.CSS_SELECTOR, ".info_runtime")),
-        "휴무일": "",  # 필요시 추가 크롤링 가능
-        "위도": driver.execute_script("return mapview.map.getCenter().getLat();"),
-        "경도": driver.execute_script("return mapview.map.getCenter().getLng();")
-    }
-
-    # 메뉴 크롤링
-    store_info["메뉴"] = []
+# 팝업 제거
+def remove_dimmed_layer(driver):
     try:
-        menu_elements = driver.find_elements(By.CSS_SELECTOR, ".list_goods .info_goods")
-        for menu in menu_elements:
-            name = safe_get_text(menu.find_element(By.CSS_SELECTOR, ".tit_item"))
-            price = safe_get_text(menu.find_element(By.CSS_SELECTOR, ".desc_item"))
-            store_info["메뉴"].append({"메뉴명": name, "가격": price})
+        dimmed_layer = driver.find_element(By.ID, 'dimmedLayer')
+        driver.execute_script("arguments[0].style.display='none';", dimmed_layer)
     except:
         pass
 
-    return store_info
-
-# 구별 장소 목록 수집 함수
-def get_places_by_district(district):
-    search_url = f"https://map.kakao.com/?q={district}+맛집"
-    driver.get(search_url)
+# 장소 탭 클릭
+def click_place_tab(driver):
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="info.main.options"]/li[2]/a'))
+    ).click()
     time.sleep(2)
 
-    place_links = []
-    for _ in range(3):  # 첫 3페이지 탐색
-        places = driver.find_elements(By.CSS_SELECTOR, ".link_name")
-        place_links.extend([p.get_attribute("href") for p in places])
-        
-        next_btn = driver.find_element(By.CSS_SELECTOR, ".btn_next")
-        if "off" in next_btn.get_attribute("class"):
-            break
-        next_btn.click()
+
+# 장소 더보기 클릭
+def click_place_more(driver):
+    try:
+        driver.find_element(By.ID, 'info.search.place.more').click()
+        time.sleep(2)
+    except:
+        pass
+
+# 메뉴 탭 펼치고 메뉴 수집
+def expand_menu_tab_and_collect(driver):
+    menu_items = []
+    try:
+        menu_tab = driver.find_element(By.CSS_SELECTOR, 'a[href="#menuInfo"]')
+        menu_tab.click()
         time.sleep(2)
 
-    return place_links
+        while True:
+            try:
+                more_button = driver.find_element(By.CSS_SELECTOR, '.wrap_more a.link_more')
+                if more_button.is_displayed():
+                    more_button.click()
+                    time.sleep(2)
+                else:
+                    break
+            except:
+                break
 
-# 서울시 전체 구 리스트
-seoul_districts = [
-    "강남구", "강동구", "강북구", "강서구", "관악구", "광진구",
-    "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구",
-    "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구",
-    "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"
-]
+        menu_elements = driver.find_elements(By.CSS_SELECTOR, '.list_goods > li')
+        for element in menu_elements:
+            name = element.find_element(By.CSS_SELECTOR, '.tit_item').text.strip()
+            try:
+                price = element.find_element(By.CSS_SELECTOR, '.desc_item').text.strip()
+            except:
+                price = '가격정보 없음'
+            menu_items.append(f'{name} ({price})')
 
-# 최종 실행 함수
-def main():
+    except Exception as e:
+        print(f"❌ 메뉴 수집 실패: {e}")
+        return ['메뉴 없음']
+
+    return menu_items if menu_items else ['메뉴 없음']
+
+# 매장 상세 정보 수집
+def get_store_details(driver, detail_url):
+    original_window = driver.current_window_handle
+
+    driver.execute_script("window.open(arguments[0]);", detail_url)
+    WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
+
+    driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(2)
+
+    menu_list = expand_menu_tab_and_collect(driver)
+    menu_text = ', '.join(menu_list)
+
+    driver.close()
+    driver.switch_to.window(original_window)
+
+    return menu_text
+
+# 모든 페이지 크롤링 (최종 수정본)
+def crawl_all_pages(driver):
     all_data = []
-    for district in seoul_districts:
-        print(f"📍 {district} 맛집 크롤링 시작...")
-        place_urls = get_places_by_district(district)
 
-        for url in place_urls:
-            info = crawl_store_info(url)
-            if info:
-                info["구"] = district
-                all_data.append(info)
+    def process_current_page():
+        nonlocal all_data
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        stores = soup.select('.placelist > .PlaceItem')
 
-    df = pd.DataFrame(all_data)
-    df.to_excel("서울_맛집_정보_크롤링_결과.xlsx", index=False)
-    print("✅ 크롤링 완료 및 저장 완료")
+        for store in stores:
+            try:
+                name = store.select_one('.head_item .tit_name .link_name').text.strip()
+                degree = store.select_one('.rating .score .num').text.strip()
+                review_count = store.select_one('.review em[data-id="numberofreview"]').text.strip() or '0'
+                address = store.select_one('.info_item .addr').text.strip()
+                tel = store.select_one('.info_item .phone').text.strip() if store.select_one('.info_item .phone') else '전화번호 없음'
+                detail_url = store.select_one('.contact .moreview')['href']
 
-if __name__ == "__main__":
-    main()
-    driver.quit()
+                menu_text = get_store_details(driver, detail_url)
+
+                print(f"📍 {name} | 평점: {degree} | 리뷰 {review_count}개 수집 완료")
+                all_data.append([name, degree, review_count, address, tel, menu_text])
+
+            except Exception as e:
+                print(f"❌ 매장 크롤링 실패: {e}")
+
+    page = 1
+    while True:
+        process_current_page()
+
+        try:
+            if page % 5 == 0:
+                next_btn = driver.find_element(By.ID, 'info.search.page.next')
+                if "disabled" in next_btn.get_attribute("class"):
+                    break
+                next_btn.click()
+            else:
+                driver.find_element(By.ID, f'info.search.page.no{page % 5 + 1}').click()
+
+            page += 1
+            time.sleep(2)
+
+        except:
+            break
+
+    return all_data
+# CSV 저장 (날짜 포함 & 위도/경도 추가)
+def save_to_csv(gu_name, data):
+    today = datetime.now().strftime("%Y%m%d")
+    filename = f'{today}_{gu_name}_맛집_크롤링.csv'
+
+    with open(filename, 'w', encoding='utf-8-sig', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['이름', '평점', '리뷰수', '주소', '위도', '경도', '전화번호', '메뉴'])
+
+        for row in data:
+            name, degree, review_count, address, tel, menu_text = row
+            lat, lon = get_lat_lon(address)
+            writer.writerow([name, degree, review_count, address, lat, lon, tel, menu_text])
+
+    print(f"✅ {gu_name} 저장 완료 ({filename})")
+
+# 서울시 구별 크롤링 실행
+def crawl_seoul_gu():
+    for gu in seoul_gu_list:
+        print(f"🔹 {gu} 크롤링 시작!")
+        driver = init_driver()
+        search_keyword(driver, f'{gu} 맛집')
+
+        all_data = crawl_all_pages(driver)
+        save_to_csv(gu, all_data)
+
+        driver.quit()
+        print(f"✅ {gu} 크롤링 및 저장 완료\n")
+
+# 메인 실행
+if __name__ == '__main__':
+    crawl_seoul_gu()
