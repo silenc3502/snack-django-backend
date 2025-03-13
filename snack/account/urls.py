@@ -11,4 +11,5 @@ urlpatterns = [
     path("create/", AccountController.as_view({"post": "createAccount"}), name="create-account"),
     path("get/<str:email>/", AccountController.as_view({"get": "getAccount"}), name="get-account"),
     path("update-last-used/<str:email>/", AccountController.as_view({"put": "updateLastUsed"}), name="update-last-used"),
+    path("email/", AccountController.as_view({"post": "requestEmail"}), name="request-email"),
 ]
