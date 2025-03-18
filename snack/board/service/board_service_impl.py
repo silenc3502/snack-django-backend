@@ -48,20 +48,23 @@ class BoardServiceImpl(BoardService):
         """ 특정 시간 범위(07:00~10:00) 사이에 모집 종료되는 게시글을 조회한다. """
         return self.__boardRepository.findByEndTimeRange(start_hour, end_hour)
 
-    def updateBoard(self, board_id: int, title: str = None, content: str = None, image=None, end_time=None) -> Board:
+    def updateBoard(self, board_id: int, user: AccountProfile, title: str = None, content: str = None, image=None, end_time=None) -> Board:
         """ 게시글을 수정한다. """
         board = self.__boardRepository.findById(board_id)
         if not board:
+            return None
+        
+        if board.author != user:
             return None
 
         if title:
             board.title = title
         if content:
             board.content = content
-        if image:
-            board.image = image
         if end_time:
             board.end_time = end_time
+        if image:
+            board.image_url = self.__boardRepository.uploadImageToS3(image)
 
         return self.__boardRepository.save(board)
 

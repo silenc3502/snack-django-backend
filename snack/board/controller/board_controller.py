@@ -30,7 +30,7 @@ class BoardController(viewsets.ViewSet):
             "success": True,
             "board_id": board.id,
             "title": board.title,
-            "author_nickname": board.getAuthorNickname()
+            "author_nickname": board.getAuthorNickname(),
             "image_url" : board.getImageUrl()
         }, status=status.HTTP_201_CREATED)
 
@@ -108,12 +108,22 @@ class BoardController(viewsets.ViewSet):
     def updateBoard(self, request, board_id):
         """게시글 수정"""
         postRequest = request.data
+        user_id = postRequest.get("user_id")
         title = postRequest.get("title")
         content = postRequest.get("content")
         image = request.FILES.get("image")
         end_time = postRequest.get("end_time")
 
-        updated_board = self.__boardService.updateBoard(board_id, title, content, image, end_time)
+        if not user_id:
+            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = AccountProfile.objects.get(account__id=user_id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        updated_board = self.__boardService.updateBoard(board_id, user, title, content, image, end_time)
+
         if not updated_board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
@@ -121,7 +131,8 @@ class BoardController(viewsets.ViewSet):
             "success": True,
             "message": "게시글이 수정되었습니다.",
             "board_id": updated_board.id,
-            "title": updated_board.title
+            "title": updated_board.title,
+            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S')
         }, status=status.HTTP_200_OK)
 
     def deleteBoard(self, request, board_id):

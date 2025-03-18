@@ -15,6 +15,7 @@ class Board(models.Model):
     image_url = models.URLField(null=True, blank=True)  # 이미지 업로드
     author = models.ForeignKey(AccountProfile, on_delete=models.CASCADE)  # AccountProfile 참조
     created_at = models.DateTimeField(auto_now_add=True)  # 작성 시간
+    updated_at = models.DateTimeField(auto_now=True)
     end_time = models.DateTimeField()  # 모집 종료 시간
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')  # 상태
 
