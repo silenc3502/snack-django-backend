@@ -25,5 +25,7 @@ urlpatterns = [
     path("account-profile/", include('account_profile.urls')),
     #path("google-oauth/", include('google_authentication.urls')),
     path("naver-oauth/", include('naver_authentication.urls')),
-    path("restaurants/", include('restaurants.urls'))
+    path("restaurants/", include('restaurants.urls')),
+    path("board/", include('board.urls')),
+    path("comment/", include('comment.urls')),
 ]

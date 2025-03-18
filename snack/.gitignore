@@ -1,5 +1,11 @@
 .env
 
+<<<<<<< Updated upstream
 avcaxcxc.txt
 
 temp/
+=======
+temp/
+
+.github/
+>>>>>>> Stashed changes

@@ -34,6 +34,9 @@ class AccountProfile(models.Model):
             return today.year - self.account_birth.year - ((today.month, today.day) < (self.account_birth.month, self.account_birth.day))
         return None
     
+    def get_role(self):
+        return self.account.role_type.role_type
+    
     def save(self, *args, **kwargs):
         """저장하기 전에 자동으로 account_age 값을 업데이트"""
         self.account_age = self.get_age()  # 나이 계산 후 저장
