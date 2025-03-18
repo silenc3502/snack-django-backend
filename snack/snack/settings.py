@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'google_authentication',
     'naver_authentication',
     'restaurants',
+    'board',
+    'comment',
 ]
 
 MIDDLEWARE = [
