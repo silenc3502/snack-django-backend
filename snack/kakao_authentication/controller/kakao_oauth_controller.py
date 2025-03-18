@@ -69,7 +69,9 @@ class KakaoOauthController(viewsets.ViewSet):
                 self.accountService.updateLastUsed(account.id)
 
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
-                print(f"userToken: {userToken}")
+                print(userToken)
+                abcToken = self.redisCacheService.storeKeyValue(account.email, account.id)
+                print(abcToken)
 
             return JsonResponse({'userToken': userToken})
 

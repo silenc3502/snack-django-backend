@@ -33,8 +33,10 @@ class AccountController(viewsets.ViewSet):
         """이메일을 기반으로 Redis에서 계정 ID를 찾아서 조회"""
         account_id = self.redisCacheService.getValueByKey(email)
 
+        print(account_id)
+
         if not account_id:
-            return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         account = self.__accountService.findAccountById(account_id)
         if not account:
