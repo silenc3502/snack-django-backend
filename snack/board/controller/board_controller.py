@@ -165,4 +165,29 @@ class BoardController(viewsets.ViewSet):
 
         if not updated_board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({
+            "success": True,
+            "message": "게시글이 수정되었습니다.",
+            "board_id": updated_board.id,
+            "title": updated_board.title,
+            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        }, status=status.HTTP_200_OK)
+
+    def deleteBoard(self, request, board_id):
+        """게시글 삭제"""
+        user_id = request.data.get("user_id")
+
+        if not user_id:
+            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = AccountProfile.objects.get(account__id=user_id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        deleted = self.__boardService.deleteBoard(board_id, user)
+        if not deleted:
+            return JsonResponse({"error": "삭제 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        return JsonResponse({"success": True, "message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
 
