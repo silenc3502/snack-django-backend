@@ -8,3 +8,9 @@ debug_kakao_page.html
 
 .env
 snack/snack/__pycache__/settings.cpython-312.pyc
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
