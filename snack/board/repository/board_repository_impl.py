@@ -5,6 +5,7 @@ from board.entity.board import Board
 from board.repository.board_repository import BoardRepository
 from account_profile.entity.account_profile import AccountProfile
 from utility.s3_client import S3Client
+from restaurants.entity.restaurants import Restaurant
 
 class BoardRepositoryImpl(BoardRepository):
     __instance = None
@@ -44,6 +45,17 @@ class BoardRepositoryImpl(BoardRepository):
     def findAll(self):
         """모든 게시글을 조회한다."""
         return list(Board.objects.all())
+    
+    def searchBoards(self, keyword: str):
+        """검색어를 기반으로 게시글 검색 (게시글 제목 + 식당 주소 포함)"""
+
+        title_matched_boards = Board.objects.filter(title__icontains=keyword)
+
+        restaurants = Restaurant.objects.filter(address__icontains=keyword)
+
+        location_matched_boards = Board.objects.filter(restaurant__in=restaurants)
+
+        return title_matched_boards | location_matched_boards
 
     def findByAuthor(self, author: AccountProfile):
         """작성자의 게시글을 조회한다."""
