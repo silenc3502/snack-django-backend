@@ -98,12 +98,10 @@ class KakaoOauthController(viewsets.ViewSet):
             return JsonResponse({'error': 'Email and nickname are required'}, status=400)
 
         try:
-<<<<<<< Updated upstream
             # 🔹 가입된 OAuth 경로 충돌 체크
             conflict_message = self.accountService.checkAccountPath(email, account_path)
             if conflict_message:
                 return JsonResponse({'success': False, 'error_message': conflict_message}, status = 200)
-=======
             # 이메일을 기반으로 계정을 찾거나 새로 생성합니다.
             account = self.accountService.checkEmailDuplication(email)
             if account is None:
@@ -111,7 +109,6 @@ class KakaoOauthController(viewsets.ViewSet):
                 accountProfile = self.accountProfileService.createAccountProfile(
                         account.id, nickname, nickname, phone_num, add, sex, birth, pay, sub
                     )
->>>>>>> Stashed changes
 
             with transaction.atomic():  # 🔥 Atomic 트랜잭션 시작
                 # 🔹 이메일 중복 검사
