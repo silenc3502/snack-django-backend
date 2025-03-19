@@ -1,8 +1,10 @@
 from django.http import JsonResponse
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from board.service.board_service_impl import BoardServiceImpl
 from account_profile.entity.account_profile import AccountProfile
 from django.core.exceptions import ObjectDoesNotExist
+from restaurants.entity.restaurants import Restaurant
+
 
 class BoardController(viewsets.ViewSet):
     __boardService = BoardServiceImpl.getInstance()
@@ -15,6 +17,7 @@ class BoardController(viewsets.ViewSet):
         author_id = postRequest.get("author_id")
         image = request.FILES.get("image")  # 이미지 파일 (선택적)
         end_time = postRequest.get("end_time")  # 종료 시간
+        restaurant_id = postRequest.get("restaurant_id")
 
         if not title or not content or not author_id or not end_time:
             return JsonResponse({"error": "title, content, author_id, end_time이 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
@@ -24,14 +27,19 @@ class BoardController(viewsets.ViewSet):
         except ObjectDoesNotExist:
             return JsonResponse({"error": "작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        board = self.__boardService.createBoard(title, content, author, image, end_time)
+        restaurant = None
+        if restaurant_id:
+            restaurant = Restaurant(id = restaurant_id)
+
+        board = self.__boardService.createBoard(title, content, author, image, end_time, restaurant)
 
         return JsonResponse({
             "success": True,
             "board_id": board.id,
             "title": board.title,
             "author_nickname": board.getAuthorNickname(),
-            "image_url" : board.getImageUrl()
+            "image_url" : board.getImageUrl(),
+            "restaurant" : board.restaurant.name if board.restaurant else None
         }, status=status.HTTP_201_CREATED)
 
     def getBoard(self, request, board_id):
@@ -50,6 +58,27 @@ class BoardController(viewsets.ViewSet):
             "status": board.status,
             "success": True
         }, status=status.HTTP_200_OK)
+    
+    def searchBoards(self, request):
+        """검색어를 기반으로 게시글 검색 API (게시글 제목 + 지역 포함)"""
+        keyword = request.GET.get("keyword")
+
+        if not keyword:
+            return JsonResponse({"error": "검색어(keyword) 파라미터가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        boards = self.__boardService.searchBoards(keyword)
+
+        if not boards:
+            return JsonResponse({"message": "검색된 게시글이 없습니다.", "success": True}, status=status.HTTP_200_OK)
+
+        return JsonResponse({
+            "success": True,
+            "boards": [
+                {"id": board.id, "title": board.title, "author": board.author.account_nickname, 
+                 "restaurant": board.restaurant.name if board.restaurant else None}
+                for board in boards
+            ]
+        }, status=status.HTTP_200_OK)
 
     def getAllBoards(self, request):
         """모든 게시글 조회"""
@@ -67,6 +96,7 @@ class BoardController(viewsets.ViewSet):
         ]
 
         return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
+        
 
     def getBoardsByAuthor(self, request, author_id):
         """특정 작성자의 게시글 조회"""

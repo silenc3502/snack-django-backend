@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.timezone import now, localtime
 from account_profile.entity.account_profile import AccountProfile
 import pytz
+from restaurants.entity.restaurants import Restaurant
 
 class Board(models.Model):
     STATUS_CHOICES = [
@@ -18,6 +19,8 @@ class Board(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     end_time = models.DateTimeField()  # 모집 종료 시간
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')  # 상태
+
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'board'

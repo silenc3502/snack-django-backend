@@ -15,6 +15,11 @@ class BoardRepository(ABC):
         pass
 
     @abstractmethod
+    def searchBoards(self, keywords):
+        """검색어로 게시글 찾기기"""
+        pass
+
+    @abstractmethod
     def findAll(self):
         """모든 게시글을 조회한다."""
         pass

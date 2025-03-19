@@ -4,7 +4,7 @@ from account_profile.entity.account_profile import AccountProfile
 
 class BoardService(ABC):
     @abstractmethod
-    def createBoard(self, title: str, content: str, author: AccountProfile, image=None, end_time=None) -> Board:
+    def createBoard(self, title: str, content: str, author: AccountProfile, image=None, end_time=None, restaurant=None) -> Board:
         """새로운 게시글을 생성한다."""
         pass
 
@@ -16,6 +16,10 @@ class BoardService(ABC):
     @abstractmethod
     def findAllBoards(self) -> list[Board]:
         """모든 게시글을 조회한다."""
+        pass
+
+    @abstractmethod
+    def searchBoards(self, keyword: str):
         pass
 
     @abstractmethod
