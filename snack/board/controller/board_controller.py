@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from rest_framework import status, viewsets
 from board.service.board_service_impl import BoardServiceImpl
 from account_profile.entity.account_profile import AccountProfile
+from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from restaurants.entity.restaurants import Restaurant
 
@@ -40,6 +41,7 @@ class BoardController(viewsets.ViewSet):
             "author_nickname": board.getAuthorNickname(),
             "image_url" : board.getImageUrl(),
             "restaurant" : board.restaurant.name if board.restaurant else None
+
         }, status=status.HTTP_201_CREATED)
 
     def getBoard(self, request, board_id):
@@ -81,8 +83,16 @@ class BoardController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     def getAllBoards(self, request):
-        """모든 게시글 조회"""
-        boards = self.__boardService.findAllBoards()
+        """페이지네이션을 적용한 게시글 목록 조회"""
+        page = int(request.GET.get("page", 1))  # 기본값: 1페이지
+        per_page = int(request.GET.get("per_page", 10))  # 기본값: 10개씩
+
+        boards = self.__boardService.findAllBoards().order_by('-created_at')  # 최신순 정렬
+
+        # 페이지네이션 적용
+        paginator = Paginator(boards, per_page)
+        page_obj = paginator.get_page(page)
+
         board_list = [
             {
                 "board_id": board.id,
@@ -92,9 +102,8 @@ class BoardController(viewsets.ViewSet):
                 "end_time": board.getEndTime(),
                 "status": board.status
             }
-            for board in boards
+            for board in page_obj.object_list
         ]
-
         return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
         
 
@@ -157,28 +166,3 @@ class BoardController(viewsets.ViewSet):
         if not updated_board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        return JsonResponse({
-            "success": True,
-            "message": "게시글이 수정되었습니다.",
-            "board_id": updated_board.id,
-            "title": updated_board.title,
-            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S')
-        }, status=status.HTTP_200_OK)
-
-    def deleteBoard(self, request, board_id):
-        """게시글 삭제"""
-        user_id = request.data.get("user_id")
-
-        if not user_id:
-            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = AccountProfile.objects.get(account__id=user_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        deleted = self.__boardService.deleteBoard(board_id, user)
-        if not deleted:
-            return JsonResponse({"error": "삭제 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
-
-        return JsonResponse({"success": True, "message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)

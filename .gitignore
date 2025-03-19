@@ -7,3 +7,4 @@ debug_kakao_page.html
 .DS_Store
 
 .env
+snack/snack/__pycache__/settings.cpython-312.pyc
