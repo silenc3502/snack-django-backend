@@ -152,6 +152,7 @@ class BoardController(viewsets.ViewSet):
         content = postRequest.get("content")
         image = request.FILES.get("image")
         end_time = postRequest.get("end_time")
+        restaurant = postRequest.get("restaurant")
 
         if not user_id:
             return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
@@ -170,7 +171,8 @@ class BoardController(viewsets.ViewSet):
             "message": "게시글이 수정되었습니다.",
             "board_id": updated_board.id,
             "title": updated_board.title,
-            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "restaurant" : updated_board.restaurant
         }, status=status.HTTP_200_OK)
 
     def deleteBoard(self, request, board_id):
@@ -190,4 +192,3 @@ class BoardController(viewsets.ViewSet):
             return JsonResponse({"error": "삭제 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         return JsonResponse({"success": True, "message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
-
