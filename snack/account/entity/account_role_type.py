@@ -4,7 +4,7 @@ from account.entity.role_type import RoleType
 
 
 class AccountRoleType(models.Model):
-    role_type = models.CharField(max_length=64, choices=RoleType.choices, default=RoleType.NORMAL)
+    role_type = models.CharField(max_length=64, choices=RoleType.choices, default=RoleType.USER)
 
     def __str__(self):
         return self.role_type
