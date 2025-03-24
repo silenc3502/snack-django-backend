@@ -21,14 +21,26 @@ class BoardRepositoryImpl(BoardRepository):
         if cls.__instance is None:
             cls.__instance = cls()
         return cls.__instance
-    
+        
     def uploadImageToS3(self, image_file):
-        """이미지를 AWS S3에 업로드하고 URL을 반환"""
-        if not image_file:
-            return None
+        try:
+            print("🚀 S3 업로드 시작: 파일명 =", image_file.name)
+            s3Client = S3Client.getInstance()
 
-        file_name = f"board_images/{uuid4()}_{image_file.name}"  # 고유한 파일명 생성
-        return self.__s3_client.upload_file(image_file.read(), file_name)  # S3에 업로드 후 URL 반환
+            if not image_file:
+                print("❌ 이미지 파일이 없음")
+                return None
+
+            file_name = f"board_images/{uuid4()}_{image_file.name}"
+            file_url = s3Client.upload_file(image_file, file_name)
+            print("✅ S3 업로드 성공, URL =", file_url)
+            return file_url
+
+        except Exception as e:
+            print("❌ S3 업로드 실패:", e)
+            raise Exception(f"S3 업로드 실패: {str(e)}")
+
+
 
     def save(self, board: Board):
         """새로운 게시글을 저장한다."""

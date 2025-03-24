@@ -28,15 +28,22 @@ class S3Client:
         )
         self.bucket_name = os.getenv('AWS_BUCKET_NAME')
 
-    def upload_file(self, file_content: str, file_name: str) -> str:
+    def upload_file(self, file_obj, file_name: str) -> str:
         try:
-            self.s3_client.put_object(
+            print("✅ S3 업로드 시작", file_name)
+            print("✅ file_obj type:", type(file_obj))
+
+            self.s3_client.upload_fileobj(
+                Fileobj=file_obj,
                 Bucket=self.bucket_name,
                 Key=file_name,
-                Body=file_content,
-                ContentType='text/html'
+                ExtraArgs={'ContentType': file_obj.content_type}
             )
+
             file_url = f"https://{self.bucket_name}.s3.amazonaws.com/{file_name}"
+            print("✅ 업로드 성공:", file_url)
             return file_url
+
         except Exception as e:
+            print("❌ S3 업로드 실패:", e)
             raise Exception(f"파일 업로드 실패: {str(e)}")
