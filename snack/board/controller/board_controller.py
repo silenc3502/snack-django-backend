@@ -18,6 +18,17 @@ class BoardController(viewsets.ViewSet):
         author_id = postRequest.get("author_id")
         image = request.FILES.get("image")  # 이미지 파일 (선택적)
         end_time = postRequest.get("end_time")  # 종료 시간
+
+        # 변환 코드 추가
+        if isinstance(end_time, str):
+            from django.utils.dateparse import parse_datetime
+            from django.utils.timezone import make_naive
+            import pytz
+
+            end_time = parse_datetime(end_time)
+            if end_time and end_time.tzinfo is not None:
+                end_time = make_naive(end_time, timezone=pytz.timezone('Asia/Seoul'))
+
         restaurant_id = postRequest.get("restaurant_id")
 
         if not title or not content or not author_id or not end_time:
