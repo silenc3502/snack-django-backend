@@ -44,7 +44,7 @@ class BoardRepositoryImpl(BoardRepository):
 
     def findAll(self):
         """모든 게시글을 조회한다."""
-        return list(Board.objects.all())
+        return Board.objects.all()
     
     def searchBoards(self, keyword: str):
         """검색어를 기반으로 게시글 검색 (게시글 제목 + 식당 주소 포함)"""

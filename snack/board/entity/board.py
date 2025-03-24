@@ -3,6 +3,8 @@ from django.utils.timezone import now, localtime
 from account_profile.entity.account_profile import AccountProfile
 import pytz
 from restaurants.entity.restaurants import Restaurant
+from django.utils.timezone import make_naive
+from django.utils.dateparse import parse_datetime
 
 class Board(models.Model):
     STATUS_CHOICES = [
@@ -40,18 +42,28 @@ class Board(models.Model):
 
     def getCreatedAt(self):
         """작성 시간을 한국 시간으로 변환"""
-        return localtime(self.created_at).strftime('%Y-%m-%d %H:%M:%S')
+        return self.created_at.strftime('%Y-%m-%d %H:%M:%S')
 
     def getEndTime(self):
         """종료 시간을 한국 시간으로 변환"""
-        return localtime(self.end_time).strftime('%Y-%m-%d %H:%M:%S')
+        return self.end_time.strftime('%Y-%m-%d %H:%M:%S')
 
     def getImageUrl(self):
         return self.image_url if self.image_url else None
-    
+
     def save(self, *args, **kwargs):
-        """ 상태 업데이트 로직 """
         kst = pytz.timezone('Asia/Seoul')
-        if self.end_time and self.end_time.astimezone(kst) < now().astimezone(kst):
+
+        # 문자열로 온 경우 파싱
+        if isinstance(self.end_time, str):
+            self.end_time = parse_datetime(self.end_time)
+
+        # timezone-aware이면 KST 기준 naive로 변환
+        if self.end_time and self.end_time.tzinfo is not None:
+            self.end_time = make_naive(self.end_time, timezone=kst)
+
+        # 상태 업데이트 로직
+        if self.end_time and self.end_time < now():
             self.status = 'closed'
+
         super().save(*args, **kwargs)
