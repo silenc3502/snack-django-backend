@@ -115,8 +115,12 @@ class BoardController(viewsets.ViewSet):
             }
             for board in page_obj.object_list
         ]
-        return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
-        
+        return JsonResponse({
+            "success": True,
+            "boards": board_list,
+            "total_pages": paginator.num_pages,
+            "current_page": page_obj.number
+        }, status=status.HTTP_200_OK)
 
     def getBoardsByAuthor(self, request, author_id):
         """특정 작성자의 게시글 조회"""
