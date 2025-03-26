@@ -111,7 +111,8 @@ class BoardController(viewsets.ViewSet):
                 "author_nickname": board.getAuthorNickname(),
                 "created_at": board.getCreatedAt(),
                 "end_time": board.getEndTime(),
-                "status": board.status
+                "status": board.status,
+                "image_url": board.getImageUrl(),
             }
             for board in page_obj.object_list
         ]
