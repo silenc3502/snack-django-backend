@@ -29,14 +29,19 @@ class AccountController(viewsets.ViewSet):
 
         return JsonResponse({"success": True, "account_id": account.id}, status=status.HTTP_201_CREATED)
 
-    def getAccount(self, request, email):
-        """이메일을 기반으로 Redis에서 계정 ID를 찾아서 조회"""
-        account_id = self.redisCacheService.getValueByKey(email)
+    def getAccount(self, request):
+        print("✅ META:", request.META)
+        print("✅ usertoken:", request.META.get("HTTP_USERTOKEN"))
+        print("account_id:", request.headers.get("Account-Id"))
+        account_id = request.headers.get("Account-Id")  # ✅ 핵심
+        user_token = request.headers.get("userToken")
 
-        print(account_id)
+        if not user_token or not account_id:
+            return JsonResponse({"error": "userToken과 account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not account_id:
-            return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        redis_account_id = self.redisCacheService.getValueByKey(user_token)
+        if str(redis_account_id) != str(account_id):
+            return JsonResponse({"error": "토큰 인증 실패", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         account = self.__accountService.findAccountById(account_id)
         if not account:
