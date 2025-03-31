@@ -15,6 +15,7 @@ from pathlib import Path
 
 from django.conf.global_settings import CSRF_TRUSTED_ORIGINS
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 import boto3
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -86,7 +87,7 @@ CORS_ALLOW_METHODS = [
 
 CORS_ALLOW_HEADERS = [
     'accept',
-    'accpet-encoding',
+    'accept-encoding',
     'authorization',
     'content-type',
     'dnt',
@@ -94,7 +95,11 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-request-with',
+    'userToken',
+    'Account-Id',
 ]
+
+CORS_EXPOSE_HEADERS = ['usertoken', 'account_id']
 
 KAKAO = {
     'LOGIN_URL': os.getenv('KAKAO_LOGIN_URL'),

@@ -33,12 +33,16 @@ class AccountProfileController(viewsets.ViewSet):
         )
         return JsonResponse({"success": True, "profile_id": profile.account.id}, status=status.HTTP_201_CREATED)
 
-    def getProfile(self, request, email):
-        """이메일을 이용하여 AccountProfile을 조회하는 엔드포인트"""
-        account_id = self.redisCacheService.getValueByKey(email)
+    def getProfile(self, request):
+        account_id = request.headers.get("Account-Id")  # ✅ 핵심
+        user_token = request.headers.get("userToken")
 
-        if not account_id:
-            return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+        if not user_token or not account_id:
+            return JsonResponse({"error": "userToken과 account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        redis_account_id = self.redisCacheService.getValueByKey(user_token)
+        if str(redis_account_id) != str(account_id):
+            return JsonResponse({"error": "토큰 인증 실패", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         profile = self.__profileService.getProfileByAccountId(account_id)
 

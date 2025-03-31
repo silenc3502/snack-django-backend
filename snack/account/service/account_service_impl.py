@@ -54,9 +54,12 @@ class AccountServiceImpl(AccountService):
     def checkAccountPath(self, email: str, login_path: str):
         """가입된 경로와 로그인 시도 경로가 다르면 충돌 발생"""
         existing_account = self.__accountRepository.findByEmail(email)
+        account_path_str = getattr(existing_account, 'account_path', 'None')
+        print(f"⚡ 기존 가입된 account_path: {account_path_str}")
+
         
         print(f"🔍 checkAccountPath() - email: {email}, login_path: {login_path}")
-        print(f"⚡ 기존 가입된 account_path: {existing_account.account_path if existing_account else 'None'}")
+        
 
         if existing_account and existing_account.account_path != login_path:
             return f"이미 {existing_account.account_path}로 가입된 이메일입니다. {login_path}로 로그인할 수 없습니다."
