@@ -1,112 +1,137 @@
 import uuid
+from datetime import datetime
 
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import render
 from rest_framework import viewsets, status
-from rest_framework.status import HTTP_200_OK
 
+from google_authentication.service.google_oauth_service_impl import GoogleOauthServiceImpl
 from account.service.account_service_impl import AccountServiceImpl
 from account_profile.service.account_profile_service_impl import AccountProfileServiceImpl
-from google_authentication.serializer.google_oauth_access_token_serializer import googleOauthAccessTokenSerializer
-from google_authentication.service.google_oauth_service_impl import googleOauthServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from account.entity.role_type import RoleType
 
-class googleOauthController(viewsets.ViewSet):
-    googleOauthService = googleOauthServiceImpl.getInstance()
+class GoogleOauthController(viewsets.ViewSet):
+    googleOauthService = GoogleOauthServiceImpl.getInstance()
     accountService = AccountServiceImpl.getInstance()
     accountProfileService = AccountProfileServiceImpl.getInstance()
     redisCacheService = RedisCacheServiceImpl.getInstance()
 
-    def requestgoogleOauthLink(self, request):
-        url = self.googleOauthService.requestgoogleOauthLink()
-
+    def requestGoogleOauthLink(self, request):
+        url = self.googleOauthService.requestGoogleOauthLink()
         return JsonResponse({"url": url}, status=status.HTTP_200_OK)
 
     def requestAccessToken(self, request):
-        serializer = googleOauthAccessTokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        code = serializer.validated_data['code']
-        print(f"code: {code}")
+        code = request.data.get('code')
+
+        if not code:
+            return JsonResponse({'error': 'Authorization code is required'}, status=400)
 
         try:
             tokenResponse = self.googleOauthService.requestAccessToken(code)
             accessToken = tokenResponse['access_token']
-            print(f"accessToken: {accessToken}")
 
             with transaction.atomic():
                 userInfo = self.googleOauthService.requestUserInfo(accessToken)
-                nickname = userInfo.get('properties', {}).get('nickname', '')
-                email = userInfo.get('google_account', {}).get('email', '')
-                account_path = "google"
+                email = userInfo.get('email', '')
+                name = userInfo.get('name', '')
+                nickname = userInfo.get('name', '')
+                account_path = "Google"
                 role_type = RoleType.USER
-                phone_num =""
-                add = ""
-                sex = ""
-                birth= None
-                pay = ""
-                sub = False
-                print(f"email: {email}, nickname: {nickname}")
+                phone_num = ""
+                address = ""
+                gender = ""
+                birth = None
+                payment = ""
+                subscribed = False
+
+                conflict_message = self.accountService.checkAccountPath(email, account_path)
+                if conflict_message:
+                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
 
                 account = self.accountService.checkEmailDuplication(email)
-                print(f"account: {account}")
-
+                is_new_account = False
                 if account is None:
+                    is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
-                    print(f"account: {account}")
-
-                    accountProfile = self.accountProfileService.createAccountProfile(
-                        account.id, nickname, nickname, phone_num, add, sex, birth, pay, sub
+                    self.accountProfileService.createAccountProfile(
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
-                    print(f"accountProfile: {accountProfile}")
 
                 self.accountService.updateLastUsed(account.id)
-
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
-                print(f"userToken: {userToken}")
+                self.redisCacheService.storeKeyValue(account.email, account.id)
 
-            return JsonResponse({'userToken': userToken})
+                response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
+                response['userToken'] = userToken
+                response['account_id'] = account.id
+                response["Access-Control-Expose-Headers"] = "userToken, account_id"
+                return response
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-
+        
     def requestUserToken(self, request):
-        access_token = request.data.get('access_token')  # 클라이언트에서 받은 access_token
-        email = request.data.get('email')  # 클라이언트에서 받은 email
-        nickname = request.data.get('nickname')  # 클라이언트에서 받은 nickname
+        access_token = request.data.get('access_token')
+        email = request.data.get('email')
+        nickname = request.data.get('nickname')
+        name = request.data.get('name', nickname)
+        account_path = "Google"
+        role_type = RoleType.USER
+        phone_num = request.data.get('phone_num', "")
+        address = request.data.get('address', "")
+        gender = request.data.get('gender', "")
+        birthyear = request.data.get('birthyear', "")
+        birthday = request.data.get('birthday', "")
+        payment = request.data.get('payment', "")
+        subscribed = request.data.get('subscribed', False)
+
+        birth = None
+        if birthday and birthyear:
+            try:
+                birth = datetime.strptime(f"{birthyear}-{birthday}", "%Y-%m-%d").date()
+            except ValueError:
+                birth = None
 
         if not access_token:
             return JsonResponse({'error': 'Access token is required'}, status=400)
-
         if not email or not nickname:
             return JsonResponse({'error': 'Email and nickname are required'}, status=400)
 
         try:
-            # 이메일을 기반으로 계정을 찾거나 새로 생성합니다.
-            account = self.accountService.checkEmailDuplication(email)
-            if account is None:
-                account = self.accountService.createAccount(email)
-                accountProfile = self.accountProfileService.createAccountProfile(
-                    account.getId(), nickname
-                )
+            with transaction.atomic():
+                conflict_message = self.accountService.checkAccountPath(email, account_path)
+                if conflict_message:
+                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=601)
 
-            # 사용자 토큰 생성 및 Redis에 저장
-            userToken = self.__createUserTokenWithAccessToken(account, access_token)
+                account = self.accountService.checkEmailDuplication(email)
+                is_new_account = False
+                if account is None:
+                    is_new_account = True
+                    account = self.accountService.createAccount(email, account_path, role_type)
+                    self.accountProfileService.createAccountProfile(
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                    )
 
-            return JsonResponse({'userToken': userToken})
+                self.accountService.updateLastUsed(account.id)
+                userToken = self.__createUserTokenWithAccessToken(account, access_token)
+                self.redisCacheService.storeKeyValue(account.email, account.id)
+
+                response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
+                response['userToken'] = userToken
+                response['account_id'] = account.id
+                return response
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
+
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:
-            userToken = str(uuid.uuid4())
+            userToken = f"google-{uuid.uuid4()}"
             self.redisCacheService.storeKeyValue(account.getId(), accessToken)
             self.redisCacheService.storeKeyValue(userToken, account.getId())
-
             return userToken
-
         except Exception as e:
             print('Redis에 토큰 저장 중 에러:', e)
             raise RuntimeError('Redis에 토큰 저장 중 에러')

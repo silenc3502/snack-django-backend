@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
-
-class googleOauthService(ABC):
+class GoogleOauthService(ABC):
 
     @abstractmethod
-    def requestgoogleOauthLink(self):
+    def requestGoogleOauthLink(self):
         pass
 
     @abstractmethod

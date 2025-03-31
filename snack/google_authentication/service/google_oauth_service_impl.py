@@ -1,15 +1,13 @@
-from google_authentication.repository.google_oauth_repository_impl import googleOauthRepositoryImpl
-from google_authentication.service.google_oauth_service import googleOauthService
+from google_authentication.repository.google_oauth_repository_impl import GoogleOauthRepositoryImpl
+from google_authentication.service.google_oauth_service import GoogleOauthService
 
-
-class googleOauthServiceImpl(googleOauthService):
+class GoogleOauthServiceImpl(GoogleOauthService):
     __instance = None
 
     def __new__(cls):
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
-
-            cls.__instance.__googleOauthRepository = googleOauthRepositoryImpl.getInstance()
+            cls.__instance.__googleOauthRepository = GoogleOauthRepositoryImpl.getInstance()
 
         return cls.__instance
 
@@ -20,7 +18,7 @@ class googleOauthServiceImpl(googleOauthService):
 
         return cls.__instance
 
-    def requestgoogleOauthLink(self):
+    def requestGoogleOauthLink(self):
         return self.__googleOauthRepository.getOauthLink()
 
     def requestAccessToken(self, code):
