@@ -30,9 +30,6 @@ class AccountController(viewsets.ViewSet):
         return JsonResponse({"success": True, "account_id": account.id}, status=status.HTTP_201_CREATED)
 
     def getAccount(self, request):
-        print("✅ META:", request.META)
-        print("✅ usertoken:", request.META.get("HTTP_USERTOKEN"))
-        print("account_id:", request.headers.get("Account-Id"))
         account_id = request.headers.get("Account-Id")  # ✅ 핵심
         user_token = request.headers.get("userToken")
 
@@ -109,3 +106,6 @@ class AccountController(viewsets.ViewSet):
 
             print(f"서버 오류 발생: {e}")
             return JsonResponse({"error": "서버 내부 오류", "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+    

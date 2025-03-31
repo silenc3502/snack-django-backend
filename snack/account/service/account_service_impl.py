@@ -65,12 +65,19 @@ class AccountServiceImpl(AccountService):
             return f"이미 {existing_account.account_path}로 가입된 이메일입니다. {login_path}로 로그인할 수 없습니다."
         return None
 
-    def findEmail(self, account_id: int):
+    def deactivate_account(self, account_id: int) -> bool:
         try:
-            account = self.__accountRepository.findById(account_id)
-            if account:
-                return account.getEmail()
-            return None
+            account = Account.objects.get(id=account_id)
+            account.is_active = False
+            account.save()
+            return True
+        except Account.DoesNotExist:
+            return False
 
-        except ObjectDoesNotExist:
-            return None
+    def deleteAccountById(self, account_id: int) -> bool:
+        try:
+            account = Account.objects.get(id=account_id)
+            account.delete()
+            return True
+        except Account.DoesNotExist:
+            return False
