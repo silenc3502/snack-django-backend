@@ -1,3 +1,4 @@
+import random
 import uuid
 
 from django.db import transaction
@@ -37,8 +38,7 @@ class KakaoOauthController(viewsets.ViewSet):
             with transaction.atomic():
                 userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
                 email = userInfo.get('kakao_account', {}).get('email', '')
-                nickname = userInfo.get('properties', {}).get('nickname', '')
-                name = nickname
+                name = userInfo.get('properties', {}).get('nickname', '')
                 account_path = "Kakao"
                 role_type = RoleType.USER
                 phone_num = userInfo.get('kakao_account', {}).get('phone_number', '')
@@ -65,6 +65,7 @@ class KakaoOauthController(viewsets.ViewSet):
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
@@ -85,7 +86,6 @@ class KakaoOauthController(viewsets.ViewSet):
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
-        nickname = request.data.get('nickname')
         account_path = "Kakao"
         role_type = RoleType.USER
         phone_num = request.data.get('phone_num', "")
@@ -119,6 +119,7 @@ class KakaoOauthController(viewsets.ViewSet):
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
                         account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
@@ -134,6 +135,16 @@ class KakaoOauthController(viewsets.ViewSet):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+        
+
+    def __generateUniqueNickname(self):
+        base = "헝글"
+        for _ in range(10):
+            candidate = base + str(random.randint(1000, 9999))
+            from account_profile.entity.account_profile import AccountProfile
+            if not AccountProfile.objects.filter(account_nickname=candidate).exists():
+                return candidate
+        return base + str(uuid.uuid4())[:4]
 
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:
