@@ -4,6 +4,8 @@ from account.entity.account_role_type import AccountRoleType
 from account.entity.role_type import RoleType
 from account.repository.account_repository import AccountRepository
 from django.utils.timezone import now
+from utility.encryption import AESCipher
+aes = AESCipher()
 
 class AccountRepositoryImpl(AccountRepository):
     __instance = None
@@ -31,12 +33,11 @@ class AccountRepositoryImpl(AccountRepository):
         except ObjectDoesNotExist:
             return None
 
-    def findByEmail(self, email: str):
-        """이메일로 계정을 찾는다."""
+    def findByEmail(self, email: str) -> Account:
         try:
-            account = Account.objects.get(email=email)
-            return account
-        except ObjectDoesNotExist:
+            encrypted_email = aes.encrypt(email)
+            return Account.objects.get(email=encrypted_email)
+        except Account.DoesNotExist:
             return None
 
     def updateLastUsed(self, account_id: int):

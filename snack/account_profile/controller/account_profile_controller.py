@@ -59,5 +59,23 @@ class AccountProfileController(viewsets.ViewSet):
             "account_birth": profile["account_birth"],
             "account_pay": profile["account_pay"],
             "account_sub": profile["account_sub"],
+            "account_age": profile["account_age"],
             "success": True
         }, status=status.HTTP_200_OK)
+    
+    def updateProfile(self, request):
+        account_id = request.headers.get("Account-Id")
+        user_token = request.headers.get("userToken")
+
+        if not account_id or not user_token:
+            return JsonResponse({"error": "Account-Id와 userToken이 필요합니다.", "success": False}, status=400)
+
+        redis_account_id = self.redisCacheService.getValueByKey(user_token)
+        if str(redis_account_id) != str(account_id):
+            return JsonResponse({"error": "토큰 인증 실패", "success": False}, status=403)
+
+        post_data = request.data
+        updated_profile = self.__profileService.updateProfile(account_id, post_data)
+
+        return JsonResponse({"success": True, "account_id": updated_profile.account.id}, status=200)
+

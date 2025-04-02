@@ -1,3 +1,4 @@
+import random
 import uuid
 
 from django.db import transaction
@@ -36,8 +37,8 @@ class NaverOauthController(viewsets.ViewSet):
                 userInfo = self.naverOauthService.requestUserInfo(accessToken)
                 response = userInfo.get('response', {})
                 email = response.get('email', '')
-                nickname = response.get('nickname', '')
-                name = response.get('name', '')
+                name = response.get('nickname', '')
+                #print(name)
                 account_path = "Naver"
                 role_type = RoleType.USER
                 phone_num = response.get('mobile', '')
@@ -47,6 +48,8 @@ class NaverOauthController(viewsets.ViewSet):
                 birthday = response.get('birthday', '')
                 payment = ""
                 subscribed = False
+                age = ""
+
 
                 birth = None
                 if birthday and birthyear:
@@ -55,22 +58,30 @@ class NaverOauthController(viewsets.ViewSet):
                     except ValueError:
                         birth = None
 
+                print("asdf")
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
                 if conflict_message:
                     return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
 
+                print("asdfasdf")
                 account = self.accountService.checkEmailDuplication(email)
+                print(account)
                 is_new_account = False
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    print(account)
+                    nickname = self.__generateUniqueNickname()
+                    print(nickname)
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age
                     )
 
                 self.accountService.updateLastUsed(account.id)
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
+
+                print(userToken)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['userToken'] = userToken
@@ -84,8 +95,7 @@ class NaverOauthController(viewsets.ViewSet):
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
-        nickname = request.data.get('nickname')
-        name = response.get('name', name)
+        name = request.data.get('nickname')
         account_path = "Naver"
         role_type = RoleType.USER
         phone_num = request.data.get('phone_num', "")
@@ -119,6 +129,7 @@ class NaverOauthController(viewsets.ViewSet):
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
@@ -134,6 +145,15 @@ class NaverOauthController(viewsets.ViewSet):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+        
+    def __generateUniqueNickname(self):
+        base = "헝글"
+        for _ in range(10):
+            candidate = base + str(random.randint(1000, 9999))
+            from account_profile.entity.account_profile import AccountProfile
+            if not AccountProfile.objects.filter(account_nickname=candidate).exists():
+                return candidate
+        return base + str(uuid.uuid4())[:4]
 
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:

@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+import random
 
 from django.db import transaction
 from django.http import JsonResponse
@@ -35,7 +36,6 @@ class GoogleOauthController(viewsets.ViewSet):
                 userInfo = self.googleOauthService.requestUserInfo(accessToken)
                 email = userInfo.get('email', '')
                 name = userInfo.get('name', '')
-                nickname = userInfo.get('name', '')
                 account_path = "Google"
                 role_type = RoleType.USER
                 phone_num = ""
@@ -45,21 +45,25 @@ class GoogleOauthController(viewsets.ViewSet):
                 payment = ""
                 subscribed = False
 
-                conflict_message = self.accountService.checkAccountPath(email, account_path)
-                if conflict_message:
-                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
-
+                userToken = f"google-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, email)
                 account = self.accountService.checkEmailDuplication(email)
+
+                if account:
+                    conflict_message = self.accountService.checkAccountPathByToken(email, account_path)
+                    if conflict_message:
+                        return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
+                
                 is_new_account = False
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
 
                 self.accountService.updateLastUsed(account.id)
-                userToken = self.__createUserTokenWithAccessToken(account, accessToken)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
@@ -70,12 +74,10 @@ class GoogleOauthController(viewsets.ViewSet):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
-        nickname = request.data.get('nickname')
-        name = request.data.get('name', nickname)
         account_path = "Google"
         role_type = RoleType.USER
         phone_num = request.data.get('phone_num', "")
@@ -95,26 +97,32 @@ class GoogleOauthController(viewsets.ViewSet):
 
         if not access_token:
             return JsonResponse({'error': 'Access token is required'}, status=400)
-        if not email or not nickname:
-            return JsonResponse({'error': 'Email and nickname are required'}, status=400)
+        if not email:
+            return JsonResponse({'error': 'Email is required'}, status=400)
 
         try:
             with transaction.atomic():
-                conflict_message = self.accountService.checkAccountPath(email, account_path)
-                if conflict_message:
-                    return JsonResponse({'success': False, 'error_message': conflict_message}, status=601)
+                name = request.data.get('name') or request.data.get('nickname', '')
 
                 account = self.accountService.checkEmailDuplication(email)
+                userToken = f"google-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, email)
+
+                if account:
+                    conflict_message = self.accountService.checkAccountPathByToken(account.id, userToken, account_path)
+                    if conflict_message:
+                        return JsonResponse({'success': False, 'error_message': conflict_message}, status=601)
+
                 is_new_account = False
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
+                    nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
 
                 self.accountService.updateLastUsed(account.id)
-                userToken = self.__createUserTokenWithAccessToken(account, access_token)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
@@ -125,6 +133,14 @@ class GoogleOauthController(viewsets.ViewSet):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
+    def __generateUniqueNickname(self):
+        base = "헝글"
+        for _ in range(10):
+            candidate = base + str(random.randint(1000, 9999))
+            from account_profile.entity.account_profile import AccountProfile
+            if not AccountProfile.objects.filter(account_nickname=candidate).exists():
+                return candidate
+        return base + str(uuid.uuid4())[:4]
 
     def __createUserTokenWithAccessToken(self, account, accessToken):
         try:

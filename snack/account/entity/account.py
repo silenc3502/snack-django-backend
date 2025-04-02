@@ -2,6 +2,8 @@ from django.db import models
 from account.entity.account_role_type import AccountRoleType
 from django.utils.timezone import now, localtime
 import pytz
+from utility.encryption import AESCipher
+aes = AESCipher()
 
 class Account(models.Model):
     id = models.AutoField(primary_key=True)
@@ -36,3 +38,21 @@ class Account(models.Model):
     def get_register_time_kst(self):
         """계정 생성 날짜 한국 시간으로 변환"""
         return localtime(self.account_register).strftime('%Y-%m-%d %H:%M:%S')  
+    
+    def save(self, *args, **kwargs):
+        if self.email:
+            try:
+                # 복호화 가능한 상태면 암호화 안함
+                aes.decrypt(self.email)
+            except:
+                self.email = aes.encrypt(self.email)
+        super().save(*args, **kwargs)
+
+    def get_decrypted_email(self):
+        from utility.encryption import AESCipher
+        aes = AESCipher()
+        try:
+            return aes.decrypt(self.email)
+        except Exception as e:
+            print(f"[이메일 복호화 실패]: {str(e)}")
+            return self.email  # fallback

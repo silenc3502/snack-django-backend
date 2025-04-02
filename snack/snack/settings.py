@@ -145,6 +145,8 @@ s3_client = boto3.client(
     region_name=AWS_REGION
 )
 
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
+
 ROOT_URLCONF = 'snack.urls'
 
 TEMPLATES = [

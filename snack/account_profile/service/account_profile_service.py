@@ -14,3 +14,7 @@ class AccountProfileService(ABC):
     def getProfileByAccountId(self, account_id: int) -> dict:
         """Account ID로 프로필을 찾는다."""
         pass
+
+    @abstractmethod
+    def updateProfile(self, account_id: int, update_data: dict) -> AccountProfile:
+        pass
