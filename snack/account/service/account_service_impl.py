@@ -64,6 +64,17 @@ class AccountServiceImpl(AccountService):
         if existing_account and existing_account.account_path != login_path:
             return f"이미 {existing_account.account_path}로 가입된 이메일입니다. {login_path}로 로그인할 수 없습니다."
         return None
+    
+    def updateRoleToAdmin(self, account_id):
+        account = Account.objects.get(id=account_id)
+
+        # FK로 연결된 모델 인스턴스를 가져와야 함
+        account.role_type = AccountRoleType.objects.get(role_type=RoleType.ADMIN)
+        
+
+        account.save()
+        return True
+
 
     def deactivate_account(self, account_id: int) -> bool:
         try:

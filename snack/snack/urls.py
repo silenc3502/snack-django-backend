@@ -29,4 +29,5 @@ urlpatterns = [
     path("board/", include('board.urls')),
     path("comment/", include('comment.urls')),
     path("delete_account/", include('delete_account.urls')),
+    path("github-oauth/", include('github_authentication.urls')),
 ]

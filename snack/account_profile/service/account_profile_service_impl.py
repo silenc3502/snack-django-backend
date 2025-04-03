@@ -34,6 +34,11 @@ class AccountProfileServiceImpl(AccountProfileService):
         """Account ID로 프로필을 찾는다."""
         return self.__repository.findByAccount(account_id)
     
+    def updateNicknameByAccountId(self, account_id, new_nickname):
+        profile = AccountProfile.objects.get(account_id=account_id)
+        profile.account_nickname = new_nickname
+        profile.save(update_fields=["account_nickname"])
+    
     def updateProfile(self, account_id: int, update_data: dict) -> AccountProfile:
         profile = AccountProfile.objects.get(account_id=account_id)
 

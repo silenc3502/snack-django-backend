@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'board',
     'comment',
     'delete_account',
+    'github_authentication',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,16 @@ GOOGLE = {
     'REDIRECT_URI': os.getenv('GOOGLE_REDIRECT_URI'),
     'TOKEN_REQUEST_URI': os.getenv('GOOGLE_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('GOOGLE_USER_INFO_REQUEST_URI'),
+}
+
+GITHUB = {
+    'LOGIN_URL': os.getenv('GITHUB_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('GITHUB_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('GITHUB_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('GITHUB_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('GITHUB_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('GITHUB_USER_INFO_REQUEST_URI'),
+    'ADMIN_CODE': os.getenv('GITHUB_ADMIN_CODE'),
 }
 
 TOSS_PAYMENTS = {
