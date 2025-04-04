@@ -13,7 +13,7 @@ class Account(models.Model):
     account_used_date = models.DateTimeField(auto_now=True)  # 마지막 로그인 날짜
     account_path = models.CharField(
         max_length=10,
-        choices=[('kakao', 'Kakao'), ('naver', 'Naver'), ('google', 'Google'), ('us', 'Us')],
+        choices=[('kakao', 'Kakao'), ('naver', 'Naver'), ('google', 'Google'), ('meta', 'Meta'), ('us', 'Us')],
         null=True,
         blank=True
     )  # 가입 경로

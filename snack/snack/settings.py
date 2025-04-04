@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'comment',
     'delete_account',
     'github_authentication',
+    'meta_authentication',
 ]
 
 MIDDLEWARE = [
@@ -137,6 +138,15 @@ GITHUB = {
     'TOKEN_REQUEST_URI': os.getenv('GITHUB_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('GITHUB_USER_INFO_REQUEST_URI'),
     'ADMIN_CODE': os.getenv('GITHUB_ADMIN_CODE'),
+}
+
+META = {
+    'LOGIN_URL': os.getenv('META_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('META_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('META_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('META_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('META_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('META_USER_INFO_REQUEST_URI'),
 }
 
 TOSS_PAYMENTS = {
