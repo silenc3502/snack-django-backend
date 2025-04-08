@@ -83,17 +83,16 @@ class BoardServiceImpl(BoardService):
         raise PermissionError("게시글을 수정할 권한이 없습니다.")
 
     def deleteBoard(self, board_id: int, user: AccountProfile) -> bool:
-        """ 게시글 삭제 - 작성자 본인 또는 관리자만 가능 """
         board = self.__boardRepository.findById(board_id)
         if not board:
-            return False  # 게시글이 존재하지 않음
+            return False
 
-        # 관리자이면 삭제 가능
+        # 관리자면 삭제 가능
         if user.get_role() == "ADMIN":
             return self.__boardRepository.delete(board_id)
 
-        # 작성자 본인이면 삭제 가능
-        if board.author == user:
+        # 👇 객체 비교 → ID 비교로 수정
+        if board.author.account.id == user.account.id:
             return self.__boardRepository.delete(board_id)
 
-        return False  # 권한 없음
+        return False
