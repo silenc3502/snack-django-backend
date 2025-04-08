@@ -5,43 +5,42 @@ from account_profile.entity.account_profile import AccountProfile
 from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from restaurants.entity.restaurants import Restaurant
-
+from account.service.account_service_impl import AccountServiceImpl
+from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 
 class BoardController(viewsets.ViewSet):
     __boardService = BoardServiceImpl.getInstance()
+    __accountService = AccountServiceImpl.getInstance()
+    __redisService = RedisCacheServiceImpl.getInstance()
 
     def createBoard(self, request):
-        """새로운 게시글을 생성하는 엔드포인트"""
         postRequest = request.data
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+
+        from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
+        redisService = RedisCacheServiceImpl.getInstance()
+        account_id = redisService.getValueByKey(userToken)
+
+        if not account_id:
+            return JsonResponse({"error": "로그인 인증이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
         title = postRequest.get("title")
         content = postRequest.get("content")
-        author_id = postRequest.get("author_id")
-        image = request.FILES.get("image")  # 이미지 파일 (선택적)
-        end_time = postRequest.get("end_time")  # 종료 시간
-
-        # 변환 코드 추가
-        if isinstance(end_time, str):
-            from django.utils.dateparse import parse_datetime
-            from django.utils.timezone import make_naive
-            import pytz
-
-            end_time = parse_datetime(end_time)
-            if end_time and end_time.tzinfo is not None:
-                end_time = make_naive(end_time, timezone=pytz.timezone('Asia/Seoul'))
-
+        image = request.FILES.get("image")
+        end_time = postRequest.get("end_time")
         restaurant_id = postRequest.get("restaurant_id")
 
-        if not title or not content or not author_id or not end_time:
-            return JsonResponse({"error": "title, content, author_id, end_time이 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        if not title or not content or not end_time:
+            return JsonResponse({"error": "필수 항목 누락", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            author = AccountProfile.objects.get(account__id=author_id)
+            author = AccountProfile.objects.get(account__id=account_id)
         except ObjectDoesNotExist:
-            return JsonResponse({"error": "작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"error": "작성자 계정을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         restaurant = None
         if restaurant_id:
-            restaurant = Restaurant(id = restaurant_id)
+            restaurant = Restaurant(id=restaurant_id)
 
         board = self.__boardService.createBoard(title, content, author, image, end_time, restaurant)
 
@@ -50,9 +49,8 @@ class BoardController(viewsets.ViewSet):
             "board_id": board.id,
             "title": board.title,
             "author_nickname": board.getAuthorNickname(),
-            "image_url" : board.getImageUrl(),
-            "restaurant" : board.restaurant.name if board.restaurant else None
-
+            "image_url": board.getImageUrl(),
+            "restaurant": board.restaurant.name if board.restaurant else None
         }, status=status.HTTP_201_CREATED)
 
     def getBoard(self, request, board_id):
@@ -193,7 +191,7 @@ class BoardController(viewsets.ViewSet):
 
     def deleteBoard(self, request, board_id):
         """게시글 삭제"""
-        user_id = request.data.get("user_id")
+        user_id = request.query_params.get("user_id")
 
         if not user_id:
             return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
