@@ -29,22 +29,31 @@ class AccountController(viewsets.ViewSet):
 
         return JsonResponse({"success": True, "account_id": account.id}, status=status.HTTP_201_CREATED)
 
-    def getAccount(self, request, email):
-        """이메일을 기반으로 Redis에서 계정 ID를 찾아서 조회"""
-        account_id = self.redisCacheService.getValueByKey(email)
+    def getAccount(self, request):
+        account_id = request.headers.get("Account-Id")  # ✅ 핵심
+        user_token = request.headers.get("userToken")
 
-        print(account_id)
+        if not user_token or not account_id:
+            return JsonResponse({"error": "userToken과 account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not account_id:
-            return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        redis_account_id = self.redisCacheService.getValueByKey(user_token)
+        if str(redis_account_id) != str(account_id):
+            return JsonResponse({"error": "토큰 인증 실패", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         account = self.__accountService.findAccountById(account_id)
         if not account:
             return JsonResponse({"error": "계정을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            decrypted_email = account.get_decrypted_email()
+            print(f"🔓 복호화된 이메일: {decrypted_email}")
+        except Exception as e:
+            print(f"[ERROR] 이메일 복호화 실패: {str(e)}")
+            decrypted_email = account.email  # fallback: 암호화된 그대로 반환
 
         return JsonResponse({
             "account_id": account.id,
-            "email": account.email,
+            "email": decrypted_email,
             "role_type": account.role_type.role_type,
             "account_register": account.account_register.strftime('%Y-%m-%d %H:%M:%S'),
             "account_used_date": account.account_used_date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -72,35 +81,3 @@ class AccountController(viewsets.ViewSet):
             "last_used_date": updated_account.account_used_date.strftime('%Y-%m-%d %H:%M:%S'),
             "success": True
         }, status=status.HTTP_200_OK)
-
-
-    def requestEmail(self, request):
-        """Nuxt의 이메일 요청 처리하고 반환"""
-        postRequest = request.data
-        userToken = postRequest.get("userToken")
-
-        # userToken이 없으면 400 오류 반환
-        if not userToken:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-
-            account_id = self.redisCacheService.getValueByKey(userToken)
-
-            if not account_id:
-
-                return JsonResponse({"error": "해당 account_id가 없습니다", "success": False},status=status.HTTP_404_NOT_FOUND)
-
-            foundEmail = self.__accountService.findEmail(account_id)
-
-            if foundEmail is None:
-                # 이메일 못찾음
-                return JsonResponse({"error": "이메일을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-            # 이메일 찾음
-            return JsonResponse({"email": foundEmail, "success": True}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-
-            print(f"서버 오류 발생: {e}")
-            return JsonResponse({"error": "서버 내부 오류", "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

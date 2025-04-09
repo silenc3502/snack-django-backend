@@ -15,6 +15,7 @@ from pathlib import Path
 
 from django.conf.global_settings import CSRF_TRUSTED_ORIGINS
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 import boto3
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -56,6 +57,9 @@ INSTALLED_APPS = [
     'restaurants',
     'board',
     'comment',
+    'delete_account',
+    'github_authentication',
+    'meta_authentication',
 ]
 
 MIDDLEWARE = [
@@ -86,7 +90,7 @@ CORS_ALLOW_METHODS = [
 
 CORS_ALLOW_HEADERS = [
     'accept',
-    'accpet-encoding',
+    'accept-encoding',
     'authorization',
     'content-type',
     'dnt',
@@ -94,7 +98,11 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-request-with',
+    'userToken',
+    'Account-Id',
 ]
+
+CORS_EXPOSE_HEADERS = ['usertoken', 'account_id']
 
 KAKAO = {
     'LOGIN_URL': os.getenv('KAKAO_LOGIN_URL'),
@@ -113,6 +121,34 @@ NAVER = {
     'USER_INFO_REQUEST_URI': os.getenv('NAVER_USER_INFO_REQUEST_URI'),
 }
 
+GOOGLE = {
+    'LOGIN_URL': os.getenv('GOOGLE_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('GOOGLE_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('GOOGLE_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('GOOGLE_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('GOOGLE_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('GOOGLE_USER_INFO_REQUEST_URI'),
+}
+
+GITHUB = {
+    'LOGIN_URL': os.getenv('GITHUB_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('GITHUB_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('GITHUB_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('GITHUB_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('GITHUB_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('GITHUB_USER_INFO_REQUEST_URI'),
+    'ADMIN_CODE': os.getenv('GITHUB_ADMIN_CODE'),
+}
+
+META = {
+    'LOGIN_URL': os.getenv('META_LOGIN_URL'),
+    'CLIENT_ID': os.getenv('META_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('META_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('META_REDIRECT_URI'),
+    'TOKEN_REQUEST_URI': os.getenv('META_TOKEN_REQUEST_URI'),
+    'USER_INFO_REQUEST_URI': os.getenv('META_USER_INFO_REQUEST_URI'),
+}
+
 TOSS_PAYMENTS = {
     'TOSS_PAYMENTS_BASE_URL': os.getenv('TOSS_PAYMENTS_BASE_URL'),
     'TOSS_PAYMENTS_SECRET_KEY': os.getenv('TOSS_PAYMENTS_SECRET_KEY'),
@@ -129,6 +165,8 @@ s3_client = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=AWS_REGION
 )
+
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 
 ROOT_URLCONF = 'snack.urls'
 

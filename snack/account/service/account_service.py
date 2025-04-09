@@ -23,6 +23,9 @@ class AccountService(ABC):
         pass
 
     @abstractmethod
-    def findEmail(self, account_id):
-        """Account ID로 이메일을 찾는다."""
+    def deactivate_account(self, account_id: int) -> bool:
+        pass
+
+    @abstractmethod
+    def deleteAccountById(self, account_id: int) -> bool:
         pass

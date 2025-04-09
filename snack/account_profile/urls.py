@@ -9,5 +9,6 @@ router.register(r"account/profile", AccountProfileController, basename='account-
 urlpatterns = [
     path("", include(router.urls)),
     path("create/", AccountProfileController.as_view({"post": "createProfile"}), name="create-profile"),
-    path("get/<str:email>/", AccountProfileController.as_view({"get": "getProfile"}), name="get-profile"),
+    path("get/", AccountProfileController.as_view({"get": "getProfile"}), name="get-profile"),
+    path("update/", AccountProfileController.as_view({"get": "updateProfile"}), name="update-profile"),
 ]

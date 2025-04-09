@@ -23,14 +23,18 @@ class BoardServiceImpl(BoardService):
         return cls.__instance
 
     def createBoard(self, title: str, content: str, author: AccountProfile, image=None, end_time=None, restaurant=None) -> Board:
-        """ 새로운 게시글을 생성하고, 이미지가 있으면 S3에 업로드하여 URL 저장 """
+        print("✅ createBoard 호출됨")
         board = Board(title=title, content=content, author=author, end_time=end_time, restaurant=restaurant)
 
-        # 이미지 파일이 있으면 S3에 업로드 후 URL 저장
         if image:
+            print("🟢 이미지 존재함. S3 업로드 시도")
             board.image_url = self.__boardRepository.uploadImageToS3(image)
+            print("✅ S3 업로드 완료, image_url:", board.image_url)
+        else:
+            print("⚠️ 이미지 없음")
 
         return self.__boardRepository.save(board)
+
 
     def findBoardById(self, board_id: int) -> Board:
         """ 게시글 ID로 특정 게시글을 찾는다. """
@@ -79,17 +83,16 @@ class BoardServiceImpl(BoardService):
         raise PermissionError("게시글을 수정할 권한이 없습니다.")
 
     def deleteBoard(self, board_id: int, user: AccountProfile) -> bool:
-        """ 게시글 삭제 - 작성자 본인 또는 관리자만 가능 """
         board = self.__boardRepository.findById(board_id)
         if not board:
-            return False  # 게시글이 존재하지 않음
+            return False
 
-        # 관리자이면 삭제 가능
+        # 관리자면 삭제 가능
         if user.get_role() == "ADMIN":
             return self.__boardRepository.delete(board_id)
 
-        # 작성자 본인이면 삭제 가능
-        if board.author == user:
+        # 👇 객체 비교 → ID 비교로 수정
+        if board.author.account.id == user.account.id:
             return self.__boardRepository.delete(board_id)
 
-        return False  # 권한 없음
+        return False

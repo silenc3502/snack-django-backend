@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-
-class googleOauthRepository(ABC):
+class GoogleOauthRepository(ABC):
 
     @abstractmethod
     def getOauthLink(self):
