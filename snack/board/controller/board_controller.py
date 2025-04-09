@@ -190,19 +190,9 @@ class BoardController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     def deleteBoard(self, request, board_id):
-        """게시글 삭제"""
-        user_id = request.query_params.get("user_id")
+        """게시글 삭제 - 인증은 서비스에서 처리"""
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        deleted, status_code, message = self.__boardService.deleteBoardWithToken(board_id, userToken)
 
-        if not user_id:
-            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"success": deleted, "message": message}, status=status_code)
 
-        try:
-            user = AccountProfile.objects.get(account__id=user_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        deleted = self.__boardService.deleteBoard(board_id, user)
-        if not deleted:
-            return JsonResponse({"error": "삭제 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
-
-        return JsonResponse({"success": True, "message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
