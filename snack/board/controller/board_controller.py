@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from restaurants.entity.restaurants import Restaurant
 from account.service.account_service_impl import AccountServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
+from utility.auth_utils import is_authorized_user
 
 class BoardController(viewsets.ViewSet):
     __boardService = BoardServiceImpl.getInstance()
@@ -59,14 +60,20 @@ class BoardController(viewsets.ViewSet):
         if not board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
+        # ✅ 작성자 여부 검사
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        is_author, _, _ = is_authorized_user(board, userToken)
+
         return JsonResponse({
             "board_id": board.id,
             "title": board.title,
             "content": board.content,
             "author_nickname": board.getAuthorNickname(),
+            "author_account_id": board.author.account.id,
             "created_at": board.getCreatedAt(),
             "end_time": board.getEndTime(),
             "status": board.status,
+            "is_author": is_author,  # ✅ 작성자인 경우 true
             "success": True
         }, status=status.HTTP_200_OK)
     
@@ -161,32 +168,35 @@ class BoardController(viewsets.ViewSet):
     def updateBoard(self, request, board_id):
         """게시글 수정"""
         postRequest = request.data
-        user_id = postRequest.get("user_id")
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        account_id = self.__redisService.getValueByKey(userToken)
+
+        if not account_id:
+            return JsonResponse({"error": "로그인 인증이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
         title = postRequest.get("title")
         content = postRequest.get("content")
         image = request.FILES.get("image")
         end_time = postRequest.get("end_time")
         restaurant = postRequest.get("restaurant")
 
-        if not user_id:
-            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            user = AccountProfile.objects.get(account__id=user_id)
+            user = AccountProfile.objects.get(account__id=account_id)
         except ObjectDoesNotExist:
             return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        updated_board = self.__boardService.updateBoard(board_id, user, title, content, image, end_time)
+        updated_board = self.__boardService.updateBoard(board_id, user, title, content, image, end_time, restaurant)
 
         if not updated_board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
         return JsonResponse({
             "success": True,
             "message": "게시글이 수정되었습니다.",
             "board_id": updated_board.id,
             "title": updated_board.title,
             "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "restaurant" : updated_board.restaurant
+            "restaurant": updated_board.restaurant
         }, status=status.HTTP_200_OK)
 
     def deleteBoard(self, request, board_id):
