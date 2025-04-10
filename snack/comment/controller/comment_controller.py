@@ -89,19 +89,7 @@ class CommentController(viewsets.ViewSet):
         return JsonResponse({"success": True, "comments": comment_list}, status=status.HTTP_200_OK)
 
     def deleteComment(self, request, comment_id):
-        """댓글 삭제"""
-        user_id = request.data.get("user_id")
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        deleted, status_code, message = self.__commentService.deleteComment(comment_id, userToken)
 
-        if not user_id:
-            return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = AccountProfile.objects.get(account__id=user_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        deleted = self.__commentService.deleteComment(comment_id, user)
-        if not deleted:
-            return JsonResponse({"error": "삭제 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
-
-        return JsonResponse({"success": True, "message": "댓글이 삭제되었습니다."}, status=status.HTTP_200_OK)
+        return JsonResponse({"success": deleted, "message": message}, status=status_code)
