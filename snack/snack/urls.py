@@ -31,4 +31,5 @@ urlpatterns = [
     path("delete_account/", include('delete_account.urls')),
     path("github-oauth/", include('github_authentication.urls')),
     path("meta-oauth/", include('meta_authentication.urls')),
+    path('comment/', include('comment.urls')),
 ]
