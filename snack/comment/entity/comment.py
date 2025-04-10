@@ -11,6 +11,7 @@ class Comment(models.Model):
     content = models.TextField()  # 댓글 내용
     created_at = models.DateTimeField(auto_now_add=True)  # 댓글 작성 시간
     is_deleted = models.BooleanField(default=False) # 삭제 여부
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
 
     class Meta:
         db_table = 'comment'
