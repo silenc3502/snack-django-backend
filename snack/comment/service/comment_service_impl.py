@@ -21,15 +21,22 @@ class CommentServiceImpl(CommentService):
             cls.__instance = cls()
         return cls.__instance
 
-    def createComment(self, board: Board, author: AccountProfile, content: str) -> Comment:
-        comment = Comment(board=board, author=author, content=content)
+    def createComment(self, board: Board, author: AccountProfile, content: str, parent: Comment = None) -> Comment:
+        comment = Comment(board=board, author=author, content=content, parent=parent)
         return self.__commentRepository.save(comment)
 
     def findCommentById(self, comment_id: int) -> Comment:
         return self.__commentRepository.findById(comment_id)
 
     def findAllCommentsByBoard(self, board: Board) -> list[Comment]:
-        return self.__commentRepository.findByBoard(board)
+        """게시판의 최상위 댓글 (parent가 None인 댓글)만 반환"""
+        comments = self.__commentRepository.findByBoard(board)
+        return [comment for comment in comments if comment.parent is None]
+
+    def findAllRepliesByBoard(self, board: Board) -> list[Comment]:
+        """게시판의 대댓글만 반환 (parent가 있는 댓글)"""
+        comments = self.__commentRepository.findByBoard(board)
+        return [comment for comment in comments if comment.parent is not None]
 
     def findAllCommentsByAuthor(self, author: AccountProfile) -> list[Comment]:
         return self.__commentRepository.findByAuthor(author)
