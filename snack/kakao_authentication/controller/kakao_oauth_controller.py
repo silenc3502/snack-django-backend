@@ -86,6 +86,7 @@ class KakaoOauthController(viewsets.ViewSet):
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
+        nickname = request.data.get('nickname')
         account_path = "Kakao"
         role_type = RoleType.USER
         phone_num = request.data.get('phone_num', "")
