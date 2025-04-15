@@ -8,8 +8,10 @@ from restaurants.entity.restaurants import Restaurant
 from account.service.account_service_impl import AccountServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from utility.auth_utils import is_authorized_user
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class BoardController(viewsets.ViewSet):
+    parser_classes = [MultiPartParser, FormParser]
     __boardService = BoardServiceImpl.getInstance()
     __accountService = AccountServiceImpl.getInstance()
     __redisService = RedisCacheServiceImpl.getInstance()
@@ -27,9 +29,15 @@ class BoardController(viewsets.ViewSet):
 
         title = postRequest.get("title")
         content = postRequest.get("content")
-        image = request.FILES.get("image")
         end_time = postRequest.get("end_time")
         restaurant_id = postRequest.get("restaurant_id")
+
+        print("📥 게시글 생성 요청 도착")
+        print("🔎 request.FILES:", request.FILES)
+        print("🔎 request.data:", postRequest)
+
+        image = request.FILES.get("image")
+        print("🧪 추출된 image:", image)
 
         if not title or not content or not end_time:
             return JsonResponse({"error": "필수 항목 누락", "success": False}, status=status.HTTP_400_BAD_REQUEST)
@@ -44,6 +52,8 @@ class BoardController(viewsets.ViewSet):
             restaurant = Restaurant(id=restaurant_id)
 
         board = self.__boardService.createBoard(title, content, author, image, end_time, restaurant)
+
+        print("✅ 게시글 DB 저장 완료. board.image_url:", board.image_url)
 
         return JsonResponse({
             "success": True,
