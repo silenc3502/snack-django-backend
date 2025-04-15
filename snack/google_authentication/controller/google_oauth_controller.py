@@ -45,12 +45,10 @@ class GoogleOauthController(viewsets.ViewSet):
                 payment = ""
                 subscribed = False
 
-                userToken = f"google-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, email)
                 account = self.accountService.checkEmailDuplication(email)
 
                 if account:
-                    conflict_message = self.accountService.checkAccountPathByToken(email, account_path)
+                    conflict_message = self.accountService.checkAccountPath(email, account_path)
                     if conflict_message:
                         return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
                 
@@ -64,6 +62,8 @@ class GoogleOauthController(viewsets.ViewSet):
                     )
 
                 self.accountService.updateLastUsed(account.id)
+                userToken = f"google-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
@@ -106,7 +106,7 @@ class GoogleOauthController(viewsets.ViewSet):
 
                 account = self.accountService.checkEmailDuplication(email)
                 userToken = f"google-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, email)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
 
                 if account:
                     conflict_message = self.accountService.checkAccountPathByToken(account.id, userToken, account_path)

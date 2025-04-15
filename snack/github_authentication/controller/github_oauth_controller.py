@@ -64,7 +64,7 @@ class GithubOauthController(viewsets.ViewSet):
                 print(f"✅ github login: {github_login_name}")
 
                 userToken = f"github-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, email)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
 
                 account = self.accountService.checkEmailDuplication(email)
                 if account:
