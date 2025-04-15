@@ -63,9 +63,6 @@ class GithubOauthController(viewsets.ViewSet):
                 github_login_name = userInfo.get('login', '')
                 print(f"✅ github login: {github_login_name}")
 
-                userToken = f"github-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, email)
-
                 account = self.accountService.checkEmailDuplication(email)
                 if account:
                     conflict_message = self.accountService.checkAccountPath(email, account_path)
@@ -94,6 +91,9 @@ class GithubOauthController(viewsets.ViewSet):
                 except Exception as e:
                     print("Redis 저장 오류:", e)
                     return JsonResponse({'error': str(e)}, status=500)
+
+                userToken = f"github-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, account.id)
 
                 self.accountService.updateLastUsed(account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
