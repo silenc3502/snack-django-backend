@@ -45,3 +45,18 @@ def is_comment_authorized(comment: Comment, token: str) -> tuple[bool, int, str]
         return True, 200, "댓글 인증 성공"
 
     return False, 403, "댓글 작성자 또는 관리자가 아닙니다."
+
+def get_user_info_from_token(request) -> tuple[int | None, bool]:
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    redis = RedisCacheServiceImpl.getInstance()
+    account_id = redis.getValueByKey(token)
+
+    if not account_id:
+        return None, False
+
+    try:
+        user = AccountProfile.objects.get(account__id=account_id)
+        is_admin = user.get_role() == RoleType.ADMIN
+        return int(account_id), is_admin
+    except AccountProfile.DoesNotExist:
+        return None, False

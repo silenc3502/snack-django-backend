@@ -5,6 +5,8 @@ from board.entity.board import Board
 from account_profile.entity.account_profile import AccountProfile
 from comment.entity.comment import Comment
 from django.core.exceptions import ObjectDoesNotExist
+from utility.auth_utils import get_user_info_from_token
+from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 
 
 class CommentController(viewsets.ViewSet):
@@ -79,26 +81,64 @@ class CommentController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     def getAllCommentsByBoard(self, request, board_id):
-        """게시글의 모든 댓글 조회"""
+        """게시글의 댓글 + 대댓글 전체 조회 + 정렬 + 페이지네이션"""
         try:
             board = Board.objects.get(id=board_id)
         except ObjectDoesNotExist:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        comments = Comment.objects.filter(board=board).select_related("author", "parent").order_by("id")
-        comment_list = [
-            {
-                "comment_id": comment.id,
-                "content": comment.content,
-                "author_nickname": comment.getAuthorNickname(),
-                "created_at": comment.getCreatedAt(),
-                "author_account_id": comment.author.account.id if comment.author and comment.author.account else None,
-                "parent_id": comment.parent.id if comment.parent else None,
-            }
-            for comment in comments
-        ]
+        page = int(request.GET.get("page", 1))  # 기본 1페이지
+        page_size = int(request.GET.get("page_size", 10))  # 기본 댓글 10개씩
 
-        return JsonResponse({"success": True, "comments": comment_list}, status=status.HTTP_200_OK)
+        account_id, is_admin = get_user_info_from_token(request)
+        all_comments = Comment.objects.filter(board=board).select_related("author", "parent").order_by("-created_at")
+
+        top_level_comments = [c for c in all_comments if c.parent is None]
+        replies = [c for c in all_comments if c.parent is not None]
+
+        # 댓글 페이지네이션 처리
+        start = (page - 1) * page_size
+        end = start + page_size
+        paged_top_level = top_level_comments[start:end]
+
+        # 각 댓글에 자식 대댓글 매핑
+        comment_list = []
+        for parent in paged_top_level:
+            children = [r for r in replies if r.parent.id == parent.id]
+            children_sorted = sorted(children, key=lambda x: x.created_at, reverse=True)
+
+            comment_list.append({
+                "comment_id": parent.id,
+                "content": parent.content,
+                "author_nickname": parent.getAuthorNickname(),
+                "created_at": parent.getCreatedAt(),
+                "author_account_id": parent.author.account.id if parent.author and parent.author.account else None,
+                "is_author": parent.author.account.id == account_id if parent.author else False,
+                "is_admin": is_admin,
+                "parent_id": None,
+                "replies_count": len(children_sorted),  # ✅ 전체 대댓글 수 포함
+                "replies": [
+                    {
+                        "comment_id": child.id,
+                        "content": child.content,
+                        "author_nickname": child.getAuthorNickname(),
+                        "created_at": child.getCreatedAt(),
+                        "author_account_id": child.author.account.id if child.author and child.author.account else None,
+                        "is_author": child.author.account.id == account_id if child.author else False,
+                        "is_admin": is_admin,
+                        "parent_id": parent.id
+                    }
+                    for child in children_sorted # 처음 5개만 응답
+                ]
+            })
+
+        return JsonResponse({
+            "success": True,
+            "comments": comment_list,
+            "total": len(top_level_comments),
+            "page": page,
+            "page_size": page_size
+        }, status=status.HTTP_200_OK)
 
     def getAllCommentsByAuthor(self, request, author_id):
         """작성자의 모든 댓글 조회"""
@@ -122,8 +162,8 @@ class CommentController(viewsets.ViewSet):
 
     def deleteComment(self, request, comment_id):
         """댓글 삭제"""
-        user_id = request.data.get("user_id")
         user_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_id = RedisCacheServiceImpl.getInstance().getValueByKey(user_token)
 
         if not user_id:
             return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
