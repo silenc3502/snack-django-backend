@@ -13,7 +13,7 @@ urlpatterns = [
     path('search/', BoardController.as_view({'get': 'searchBoards'}), name='search-boards'),
     path('author/<int:author_id>/', BoardController.as_view({'get': 'getBoardsByAuthor'}), name='get-boards-by-author'),
     path('end-time-range/<int:start_hour>/<int:end_hour>/', BoardController.as_view({'get': 'getBoardsByEndTimeRange'}), name='get-boards-by-end-time'),
-    path('update/<int:board_id>/', BoardController.as_view({'put': 'updateBoard'}), name='update-board'),
+    path('update/<int:board_id>/', BoardController.as_view({'put': 'updateBoard', 'patch': 'partial_update'}), name='update-board'),
     path('delete/<int:board_id>/', BoardController.as_view({'delete': 'deleteBoard'}), name='delete-board'),
 ]
 

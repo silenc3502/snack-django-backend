@@ -19,10 +19,7 @@ class BoardController(viewsets.ViewSet):
     def createBoard(self, request):
         postRequest = request.data
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
-
-        from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
-        redisService = RedisCacheServiceImpl.getInstance()
-        account_id = redisService.getValueByKey(userToken)
+        account_id = self.__redisService.getValueByKey(userToken)
 
         if not account_id:
             return JsonResponse({"error": "로그인 인증이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
@@ -31,13 +28,7 @@ class BoardController(viewsets.ViewSet):
         content = postRequest.get("content")
         end_time = postRequest.get("end_time")
         restaurant_id = postRequest.get("restaurant_id")
-
-        print("📥 게시글 생성 요청 도착")
-        print("🔎 request.FILES:", request.FILES)
-        print("🔎 request.data:", postRequest)
-
         image = request.FILES.get("image")
-        print("🧪 추출된 image:", image)
 
         if not title or not content or not end_time:
             return JsonResponse({"error": "필수 항목 누락", "success": False}, status=status.HTTP_400_BAD_REQUEST)
@@ -47,13 +38,8 @@ class BoardController(viewsets.ViewSet):
         except ObjectDoesNotExist:
             return JsonResponse({"error": "작성자 계정을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        restaurant = None
-        if restaurant_id:
-            restaurant = Restaurant(id=restaurant_id)
-
+        restaurant = Restaurant(id=restaurant_id) if restaurant_id else None
         board = self.__boardService.createBoard(title, content, author, image, end_time, restaurant)
-
-        print("✅ 게시글 DB 저장 완료. board.image_url:", board.image_url)
 
         return JsonResponse({
             "success": True,
@@ -65,12 +51,10 @@ class BoardController(viewsets.ViewSet):
         }, status=status.HTTP_201_CREATED)
 
     def getBoard(self, request, board_id):
-        """특정 게시글 조회"""
         board = self.__boardService.findBoardById(board_id)
         if not board:
             return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        # ✅ 작성자 여부 검사
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         is_author, _, _ = is_authorized_user(board, userToken)
 
@@ -83,39 +67,55 @@ class BoardController(viewsets.ViewSet):
             "created_at": board.getCreatedAt(),
             "end_time": board.getEndTime(),
             "status": board.status,
-            "is_author": is_author,  # ✅ 작성자인 경우 true
+            "image_url": board.getImageUrl(),
+            "is_author": is_author,
             "success": True
         }, status=status.HTTP_200_OK)
-    
-    def searchBoards(self, request):
-        """검색어를 기반으로 게시글 검색 API (게시글 제목 + 지역 포함)"""
-        keyword = request.GET.get("keyword")
 
-        if not keyword:
-            return JsonResponse({"error": "검색어(keyword) 파라미터가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+    def updateBoard(self, request, board_id):
+        """게시글 수정 (PUT/PATCH에서 공통으로 호출됨)"""
+        postRequest = request.data
+        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        account_id = self.__redisService.getValueByKey(userToken)
 
-        boards = self.__boardService.searchBoards(keyword)
+        if not account_id:
+            return JsonResponse({"error": "로그인 인증이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not boards:
-            return JsonResponse({"message": "검색된 게시글이 없습니다.", "success": True}, status=status.HTTP_200_OK)
+        title = postRequest.get("title")
+        content = postRequest.get("content")
+        end_time = postRequest.get("end_time")
+        restaurant_id = postRequest.get("restaurant")
+        image = request.FILES.get("image")
+
+        try:
+            user = AccountProfile.objects.get(account__id=account_id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        restaurant = Restaurant(id=restaurant_id) if restaurant_id else None
+        updated_board = self.__boardService.updateBoard(board_id, user, title, content, image, end_time, restaurant)
+
+        if not updated_board:
+            return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         return JsonResponse({
             "success": True,
-            "boards": [
-                {"id": board.id, "title": board.title, "author": board.author.account_nickname, 
-                 "restaurant": board.restaurant.name if board.restaurant else None}
-                for board in boards
-            ]
+            "message": "게시글이 수정되었습니다.",
+            "board_id": updated_board.id,
+            "title": updated_board.title,
+            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "restaurant": updated_board.restaurant.name if updated_board.restaurant else None
         }, status=status.HTTP_200_OK)
 
+    def partial_update(self, request, board_id):
+        """PATCH 메서드 대응"""
+        return self.updateBoard(request, board_id)
+
     def getAllBoards(self, request):
-        """페이지네이션을 적용한 게시글 목록 조회"""
-        page = int(request.GET.get("page", 1))  # 기본값: 1페이지
-        per_page = int(request.GET.get("per_page", 10))  # 기본값: 10개씩
+        page = int(request.GET.get("page", 1))
+        per_page = int(request.GET.get("per_page", 10))
 
-        boards = self.__boardService.findAllBoards().order_by('-created_at')  # 최신순 정렬
-
-        # 페이지네이션 적용
+        boards = self.__boardService.findAllBoards().order_by('-created_at')
         paginator = Paginator(boards, per_page)
         page_obj = paginator.get_page(page)
 
@@ -138,8 +138,25 @@ class BoardController(viewsets.ViewSet):
             "current_page": page_obj.number
         }, status=status.HTTP_200_OK)
 
+    def searchBoards(self, request):
+        keyword = request.GET.get("keyword")
+        if not keyword:
+            return JsonResponse({"error": "검색어(keyword) 파라미터가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        boards = self.__boardService.searchBoards(keyword)
+        if not boards:
+            return JsonResponse({"message": "검색된 게시글이 없습니다.", "success": True}, status=status.HTTP_200_OK)
+
+        return JsonResponse({
+            "success": True,
+            "boards": [
+                {"id": board.id, "title": board.title, "author": board.author.account_nickname,
+                 "restaurant": board.restaurant.name if board.restaurant else None}
+                for board in boards
+            ]
+        }, status=status.HTTP_200_OK)
+
     def getBoardsByAuthor(self, request, author_id):
-        """특정 작성자의 게시글 조회"""
         try:
             author = AccountProfile.objects.get(account__id=author_id)
         except ObjectDoesNotExist:
@@ -156,11 +173,9 @@ class BoardController(viewsets.ViewSet):
             }
             for board in boards
         ]
-
         return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
 
     def getBoardsByEndTimeRange(self, request, start_hour, end_hour):
-        """특정 시간대 (예: 07:00~10:00) 내 모집 종료되는 게시글 조회"""
         boards = self.__boardService.findBoardsByEndTimeRange(start_hour, end_hour)
         board_list = [
             {
@@ -172,47 +187,10 @@ class BoardController(viewsets.ViewSet):
             }
             for board in boards
         ]
-
         return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
 
-    def updateBoard(self, request, board_id):
-        """게시글 수정"""
-        postRequest = request.data
-        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
-        account_id = self.__redisService.getValueByKey(userToken)
-
-        if not account_id:
-            return JsonResponse({"error": "로그인 인증이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        title = postRequest.get("title")
-        content = postRequest.get("content")
-        image = request.FILES.get("image")
-        end_time = postRequest.get("end_time")
-        restaurant = postRequest.get("restaurant")
-
-        try:
-            user = AccountProfile.objects.get(account__id=account_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        updated_board = self.__boardService.updateBoard(board_id, user, title, content, image, end_time, restaurant)
-
-        if not updated_board:
-            return JsonResponse({"error": "게시글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        return JsonResponse({
-            "success": True,
-            "message": "게시글이 수정되었습니다.",
-            "board_id": updated_board.id,
-            "title": updated_board.title,
-            "updated_at": updated_board.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "restaurant": updated_board.restaurant
-        }, status=status.HTTP_200_OK)
-
     def deleteBoard(self, request, board_id):
-        """게시글 삭제 - 인증은 서비스에서 처리"""
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         deleted, status_code, message = self.__boardService.deleteBoardWithToken(board_id, userToken)
 
         return JsonResponse({"success": deleted, "message": message}, status=status_code)
-
