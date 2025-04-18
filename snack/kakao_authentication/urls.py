@@ -12,7 +12,7 @@ urlpatterns = [
          KakaoOauthController.as_view({ 'get': 'requestKakaoOauthLink' }),
          name='Kakao Oauth 링크 요청'),
     path('redirect-access-token',
-         KakaoOauthController.as_view({ 'post': 'requestAccessToken' }),
+         KakaoOauthController.as_view({ 'get': 'requestAccessToken','post': 'requestAccessToken' }),
          name='Kakao Access Token 요청'),
      path('request-user-token',
          KakaoOauthController.as_view({ 'post': 'requestUserToken' }),

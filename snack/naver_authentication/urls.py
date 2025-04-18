@@ -12,7 +12,7 @@ urlpatterns = [
          NaverOauthController.as_view({ 'get': 'requestNaverOauthLink' }),
          name='naver Oauth 링크 요청'),
     path('redirect-access-token',
-         NaverOauthController.as_view({ 'post': 'requestAccessToken' }),
+         NaverOauthController.as_view({ 'get': 'requestAccessToken','post': 'requestAccessToken' }),
          name='naver Access Token 요청'),
      path('request-user-token',
          NaverOauthController.as_view({ 'post': 'requestUserToken' }),
