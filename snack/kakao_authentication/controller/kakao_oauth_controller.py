@@ -75,9 +75,9 @@ class KakaoOauthController(viewsets.ViewSet):
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
-                response['userToken'] = userToken
+                response['usertoken'] = userToken
                 response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "userToken, account_id"
+                response["Access-Control-Expose-Headers"] = "usertoken, account_id"
                 return response
 
         except Exception as e:
@@ -177,6 +177,7 @@ class KakaoOauthController(viewsets.ViewSet):
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['userToken'] = userToken
                 response['account_id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken, account_id"
                 return response
 
         except Exception as e:
