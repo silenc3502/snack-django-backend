@@ -4,7 +4,6 @@ class DeletedAccount(models.Model):
     account_id = models.IntegerField(unique=True)
     deleted_at = models.DateTimeField(auto_now_add=True)
 
-
     class Meta:
         db_table = 'delete_account'
         app_label = 'delete_account'

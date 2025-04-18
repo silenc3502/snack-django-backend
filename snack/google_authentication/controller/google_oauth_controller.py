@@ -109,7 +109,7 @@ class GoogleOauthController(viewsets.ViewSet):
                 self.redisCacheService.storeKeyValue(userToken, account.id)
 
                 if account:
-                    conflict_message = self.accountService.checkAccountPathByToken(account.id, userToken, account_path)
+                    conflict_message = self.accountService.checkAccountPath(account.id, userToken, account_path)
                     if conflict_message:
                         return JsonResponse({'success': False, 'error_message': conflict_message}, status=601)
 
