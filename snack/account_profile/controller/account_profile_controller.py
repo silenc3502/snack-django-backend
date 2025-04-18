@@ -34,10 +34,10 @@ class AccountProfileController(viewsets.ViewSet):
         return JsonResponse({"success": True, "profile_id": profile.account.id}, status=status.HTTP_201_CREATED)
 
     def getProfile(self, request):
-        account_id = request.headers.get("Account-Id")
+        account_id = request.headers.get("Account_Id")
         user_token = request.headers.get("userToken")
 
-        print(f"account_id:{account_id}")
+        print(f"account_id: {account_id}")
         print(f"user_token: {user_token}")
 
         if not user_token or not account_id:
