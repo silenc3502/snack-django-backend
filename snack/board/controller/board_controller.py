@@ -8,11 +8,11 @@ from restaurants.entity.restaurants import Restaurant
 from account.service.account_service_impl import AccountServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from utility.auth_utils import is_authorized_user
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.utils import timezone
 
 class BoardController(viewsets.ViewSet):
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     __boardService = BoardServiceImpl.getInstance()
     __accountService = AccountServiceImpl.getInstance()
     __redisService = RedisCacheServiceImpl.getInstance()
