@@ -106,10 +106,10 @@ class GoogleOauthController(viewsets.ViewSet):
 
                 account = self.accountService.checkEmailDuplication(email)
                 userToken = f"google-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, account.id)
+                # self.redisCacheService.storeKeyValue(userToken, account.id)
 
                 if account:
-                    conflict_message = self.accountService.checkAccountPath(account.id, userToken, account_path)
+                    conflict_message = self.accountService.checkAccountPath(account.id, account_path)
                     if conflict_message:
                         return JsonResponse({'success': False, 'error_message': conflict_message}, status=601)
 
@@ -121,7 +121,8 @@ class GoogleOauthController(viewsets.ViewSet):
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
                     )
-
+                #userToken = f"google-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.accountService.updateLastUsed(account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 

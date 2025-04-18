@@ -2,7 +2,7 @@ import random
 import uuid
 
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.status import HTTP_200_OK
@@ -56,7 +56,7 @@ class KakaoOauthController(viewsets.ViewSet):
                     except ValueError:
                         birth = None
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
-                print(f"✅ conflict_message: {conflict_message}")  # 👈 이 줄 추가
+                print(f" conflict_message: {conflict_message}")  #  이 줄 추가
                 if conflict_message:
                     return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
 
@@ -82,6 +82,51 @@ class KakaoOauthController(viewsets.ViewSet):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
+    def requestAccessTokenForApp(self, request):
+        code = request.GET.get('code')
+        if not code:
+            return JsonResponse({'error': 'code is required'}, status=400)
+
+        print(f"[KAKAO] Received code: {code}")
+
+        try:
+            tokenResponse = self.kakaoOauthService.requestAccessTokenForApp(code)
+            accessToken = tokenResponse['access_token']
+            print(f"[KAKAO] accessToken: {accessToken}")
+
+            with transaction.atomic():
+                userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
+                print(f"[KAKAO] userInfo: {userInfo}")
+
+                kakaoAccount = userInfo.get('kakao_account', {})
+                email = kakaoAccount.get('email', '')
+                profile = kakaoAccount.get('profile', {})
+                nickname = profile.get('nickname', '')
+
+                account = self.accountService.checkEmailDuplication(email)
+                if account is None:
+                    account = self.accountService.createAccount(email)
+                    self.accountProfileService.createAccountProfile(
+                        account.getId(), nickname
+                    )
+
+                userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+
+                return HttpResponse(f"""
+                    <html>
+                      <body>
+                        <script>
+                          const userToken = '{userToken}';
+                          window.location.href = 'flutter://kakao-login-success?userToken=' + userToken;
+                        </script>
+                      </body>
+                    </html>
+                """)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
 
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
