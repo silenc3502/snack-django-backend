@@ -26,7 +26,7 @@ class KakaoOauthController(viewsets.ViewSet):
         return JsonResponse({"url": url}, status=status.HTTP_200_OK)
 
     def requestAccessToken(self, request):
-        code = request.data.get('code')
+        code = request.GET.get('code')
 
         if not code:
             return JsonResponse({'error': 'Authorization code is required'}, status=400)
