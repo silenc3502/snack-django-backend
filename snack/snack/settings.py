@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'delete_account',
     'github_authentication',
     'meta_authentication',
+    'account_prefer'
 ]
 
 MIDDLEWARE = [

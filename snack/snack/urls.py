@@ -32,4 +32,5 @@ urlpatterns = [
     path("github-oauth/", include('github_authentication.urls')),
     path("meta-oauth/", include('meta_authentication.urls')),
     path('comment/', include('comment.urls')),
+    path('account-prefer/', include('account_prefer.urls')),
 ]
