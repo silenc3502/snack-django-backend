@@ -9,6 +9,7 @@ from account.service.account_service_impl import AccountServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from utility.auth_utils import is_authorized_user
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.utils import timezone
 
 class BoardController(viewsets.ViewSet):
     parser_classes = [MultiPartParser, FormParser]
@@ -73,7 +74,6 @@ class BoardController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     def updateBoard(self, request, board_id):
-        """게시글 수정 (PUT/PATCH에서 공통으로 호출됨)"""
         postRequest = request.data
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         account_id = self.__redisService.getValueByKey(userToken)
@@ -108,15 +108,40 @@ class BoardController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     def partial_update(self, request, board_id):
-        """PATCH 메서드 대응"""
         return self.updateBoard(request, board_id)
 
     def getAllBoards(self, request):
         page = int(request.GET.get("page", 1))
         per_page = int(request.GET.get("per_page", 10))
+        sort = request.GET.get("sort", "latest")
+        status_filter = request.GET.get("status")
+        title = request.GET.get("title")
+        author = request.GET.get("author")
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
 
-        boards = self.__boardService.findAllBoards().order_by('-created_at')
-        paginator = Paginator(boards, per_page)
+        queryset = self.__boardService.findAllBoards()
+
+        if status_filter == "ongoing":
+            queryset = queryset.filter(end_time__gte=timezone.now())
+        elif status_filter == "closed":
+            queryset = queryset.filter(end_time__lt=timezone.now())
+
+        if title:
+            queryset = queryset.filter(title__icontains=title)
+
+        if author:
+            queryset = queryset.filter(author__account__nickname__icontains=author)
+
+        if start_date and end_date:
+            queryset = queryset.filter(end_time__range=[start_date, end_date])
+
+        if sort == "end_date":
+            queryset = queryset.order_by('end_time')
+        else:
+            queryset = queryset.order_by('-created_at')
+
+        paginator = Paginator(queryset, per_page)
         page_obj = paginator.get_page(page)
 
         board_list = [
@@ -137,57 +162,6 @@ class BoardController(viewsets.ViewSet):
             "total_pages": paginator.num_pages,
             "current_page": page_obj.number
         }, status=status.HTTP_200_OK)
-
-    def searchBoards(self, request):
-        keyword = request.GET.get("keyword")
-        if not keyword:
-            return JsonResponse({"error": "검색어(keyword) 파라미터가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        boards = self.__boardService.searchBoards(keyword)
-        if not boards:
-            return JsonResponse({"message": "검색된 게시글이 없습니다.", "success": True}, status=status.HTTP_200_OK)
-
-        return JsonResponse({
-            "success": True,
-            "boards": [
-                {"id": board.id, "title": board.title, "author": board.author.account_nickname,
-                 "restaurant": board.restaurant.name if board.restaurant else None}
-                for board in boards
-            ]
-        }, status=status.HTTP_200_OK)
-
-    def getBoardsByAuthor(self, request, author_id):
-        try:
-            author = AccountProfile.objects.get(account__id=author_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
-
-        boards = self.__boardService.findBoardsByAuthor(author)
-        board_list = [
-            {
-                "board_id": board.id,
-                "title": board.title,
-                "created_at": board.getCreatedAt(),
-                "end_time": board.getEndTime(),
-                "status": board.status
-            }
-            for board in boards
-        ]
-        return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
-
-    def getBoardsByEndTimeRange(self, request, start_hour, end_hour):
-        boards = self.__boardService.findBoardsByEndTimeRange(start_hour, end_hour)
-        board_list = [
-            {
-                "board_id": board.id,
-                "title": board.title,
-                "created_at": board.getCreatedAt(),
-                "end_time": board.getEndTime(),
-                "status": board.status
-            }
-            for board in boards
-        ]
-        return JsonResponse({"success": True, "boards": board_list}, status=status.HTTP_200_OK)
 
     def deleteBoard(self, request, board_id):
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
