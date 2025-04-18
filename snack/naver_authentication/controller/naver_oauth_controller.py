@@ -23,8 +23,8 @@ class NaverOauthController(viewsets.ViewSet):
         return JsonResponse({"url": url}, status=status.HTTP_200_OK)
 
     def requestAccessToken(self, request):
-        code = request.GET.get('code')
-        state = request.GET.get('state')
+        code = request.data.get('code')
+        state = request.data.get('state')
 
         if not code:
             return JsonResponse({'error': 'Authorization code is required'}, status=400)

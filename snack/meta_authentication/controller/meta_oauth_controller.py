@@ -23,7 +23,7 @@ class MetaOauthController(viewsets.ViewSet):
         return JsonResponse({"url": url}, status=status.HTTP_200_OK)
 
     def requestAccessToken(self, request):
-        code = request.GET.get('code')
+        code = request.data.get('code')
         if not code:
             return JsonResponse({'error': 'Authorization code is required'}, status=400)
 
