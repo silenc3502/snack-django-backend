@@ -103,7 +103,7 @@ CORS_ALLOW_HEADERS = [
     'account_id',
 ]
 
-CORS_EXPOSE_HEADERS = ['usertoken', 'account_id']
+CORS_EXPOSE_HEADERS = ['usertoken', 'account_id', 'authorization']
 
 KAKAO = {
     'LOGIN_URL': os.getenv('KAKAO_LOGIN_URL'),
