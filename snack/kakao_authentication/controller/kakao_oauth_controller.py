@@ -118,13 +118,16 @@ class KakaoOauthController(viewsets.ViewSet):
                       <body>
                         <script>
                           const userToken = '{userToken}';
-                          window.location.href = 'flutter://kakao-login-success?userToken=' + userToken;
+                          const email = '{email}';
+                          const nickname = '{nickname}';
+                          window.location.href = 'flutter://kakao-login-success?userToken=' + encodeURIComponent(userToken) + '&email=' + encodeURIComponent(email) + '&nickname=' + encodeURIComponent(nickname);
                         </script>
                       </body>
                     </html>
                 """)
 
         except Exception as e:
+            print(f"[KAKAO] Error: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
 
 

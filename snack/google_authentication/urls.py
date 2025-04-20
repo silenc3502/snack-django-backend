@@ -17,4 +17,7 @@ urlpatterns = [
     path('request-user-token',
          GoogleOauthController.as_view({'post': 'requestUserToken'}),
          name='Google User Token 요청'),
+    # path('redirect-app-access-token',
+    #      GoogleOauthController.as_view({'get': 'requestAccessTokenForApp'}),
+    #      name='Google Access Token 요청'),
 ]

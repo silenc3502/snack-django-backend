@@ -16,5 +16,5 @@ class KakaoOauthService(ABC):
         pass
 
     @abstractmethod
-    def requestAccessToken(self, code):
+    def requestAccessTokenForApp(self, code):
         pass
