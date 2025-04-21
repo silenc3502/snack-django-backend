@@ -14,6 +14,6 @@ class GoogleOauthService(ABC):
     def requestUserInfo(self, accessToken):
         pass
 
-    @abstractmethod
-    def requestAccessTokenForApp(self, code):
-        pass
+    # @abstractmethod
+    # def requestAccessTokenForApp(self, code):
+    #     pass
