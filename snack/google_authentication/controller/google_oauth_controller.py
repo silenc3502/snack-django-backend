@@ -127,8 +127,8 @@ class GoogleOauthController(viewsets.ViewSet):
     def requestUserToken(self, request):
         #print("point AA3 [Google] 받은 request.data:", request.data)
 
-        name = request.data.get('name') or request.data.get('nickname', '')
-        nickname = request.data.get('nickname', '')
+        name = request.data.get('name') or request.data.get('nickname', '')  # 추후 삭제
+        nickname = request.data.get('nickname', '')                          # 추후 삭제
 
         print("✔AA4 name:", name)
         print("✔AA5 nickname:", nickname)
