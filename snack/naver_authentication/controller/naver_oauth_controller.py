@@ -85,8 +85,8 @@ class NaverOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': f'login_status_ok, usertoken : {userToken}, account_id : {account.id}'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['usertoken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "usertoken,account_id"
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 print(response.items())
                 return response
 

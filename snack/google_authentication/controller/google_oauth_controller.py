@@ -70,8 +70,8 @@ class GoogleOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['userToken'] = userToken
-                response['account_id'] = str(account.id)
-                response["Access-Control-Expose-Headers"] = "userToken, account_id"
+                response['account-id'] = str(account.id)
+                response["Access-Control-Expose-Headers"] = "userToken, account-id"
                 return response
 
         except Exception as e:
@@ -186,8 +186,8 @@ class GoogleOauthController(viewsets.ViewSet):
                 self.redisCacheService.storeKeyValue(account.email, str(account.id))
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
-                response['userToken'] = userToken
-                response['account_id'] = str(account.id)
+                response['usertoken'] = userToken
+                response['account-id'] = account.id
                 return response
 
         except Exception as e:

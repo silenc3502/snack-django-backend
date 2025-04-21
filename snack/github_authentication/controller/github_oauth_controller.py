@@ -102,8 +102,8 @@ class GithubOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['usertoken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "usertoken,account_id"
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:
@@ -115,8 +115,8 @@ class GithubOauthController(viewsets.ViewSet):
     def validateAdminCode(self, request):
         """GitHub 로그인 후 관리자 권한 요청"""
         admin_code = request.data.get("admin_code")
-        user_token = request.headers.get("userToken")
-        account_id = request.headers.get("accountId")
+        user_token = request.headers.get("usertoken")
+        account_id = request.headers.get("account-id")
 
         print(f"🔍 admin_code: {admin_code}, user_token: {user_token}, account_id: {account_id}")
 
