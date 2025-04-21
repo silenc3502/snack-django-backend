@@ -50,7 +50,7 @@ class KakaoOauthRepositoryImpl(KakaoOauthRepository):
         response = requests.post(self.userInfoRequestUri, headers=headers)
         return response.json()
 
-    def getAccessTokenForApp(self, code):
+    def getAccessTokenForApp(self, code):  # redirectUri 코드가 웹과 다름
         accessTokenRequestForApp = {
             'grant_type': 'authorization_code',
             'client_id': self.clientId,
