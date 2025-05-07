@@ -161,7 +161,7 @@ class ReportController(viewsets.ViewSet):
             return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    def updateReportStatus(self, request, request_id):
+    def updateReportStatus(self, request, request_id):       # 관리자 -신고 상태 처리
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
