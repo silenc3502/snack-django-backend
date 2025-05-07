@@ -175,3 +175,30 @@ class CommentController(viewsets.ViewSet):
 
         deleted, status_code, message = self.__commentService.deleteComment(comment_id, user_token)
         return JsonResponse({"success": deleted, "message": message}, status=status_code)
+
+    def updateComment(self, request, comment_id):
+        """댓글 수정"""
+        user_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        user_id = RedisCacheServiceImpl.getInstance().getValueByKey(user_token)
+
+        if not user_id:
+            return JsonResponse({"error": "로그인 인증 필요", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        content = request.data.get("content")
+        if not content:
+            return JsonResponse({"error": "수정할 내용이 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except Comment.DoesNotExist:
+            return JsonResponse({"error": "댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        # 권한 검사 (작성자 본인 또는 관리자)
+        if comment.author.account.id != int(user_id):
+            return JsonResponse({"error": "수정 권한이 없습니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.content = content
+        comment.save()
+
+        return JsonResponse({"success": True, "message": "댓글이 수정되었습니다."}, status=status.HTTP_200_OK)
+
