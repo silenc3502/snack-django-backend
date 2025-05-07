@@ -60,42 +60,42 @@ class ReportController(viewsets.ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    #
-    # def getReportDetail(self, request, request_id): # 관리자 -신고 상세보기
-    #     user_token = request.headers.get("userToken")
-    #     if not user_token:
-    #         return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
-    #
-    #     account_id = self.redisCacheService.getValueByKey(user_token)
-    #     if not account_id:
-    #         return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-    #
-    #     account = self.__accountService.findAccountById(account_id)
-    #     if not account or account.role_type.role_type != 'ADMIN':
-    #         return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
-    #
-    #     try:
-    #         report = self.__reportService.getReportById(request_id)
-    #         report_data = {
-    #             "id": report.id,
-    #             "reporter_id": report.reporter.id,
-    #             "target_id": report.target_id,
-    #             "target_type": report.target_type,
-    #             "reason_type": report.reason_type,
-    #             "created_at": report.created_at,
-    #             "processed": report.processed,
-    #             "processed_at": report.processed_at,
-    #             "processed_by": report.processed_by.id if report.processed_by else None,
-    #         }
-    #
-    #         return JsonResponse({
-    #             "success": True,
-    #             "report": report_data
-    #         }, status=status.HTTP_200_OK)
-    #
-    #     except Report.DoesNotExist:
-    #         return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
-    #
+
+    def getReportDetail(self, request, request_id): # 관리자 -신고 상세보기
+        user_token = request.headers.get("userToken")
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
+
+        account_id = self.redisCacheService.getValueByKey(user_token)
+        if not account_id:
+            return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        account = self.__accountService.findAccountById(account_id)
+        if not account or account.role_type.role_type != 'ADMIN':
+            return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            report = self.__reportService.getReportById(request_id)
+            report_data = {
+                "id": report.id,
+                "reporter_id": report.reporter.id,
+                "target_id": report.target_id,
+                "target_type": report.target_type,
+                "reason_type": report.reason_type,
+                "created_at": report.created_at,
+                "processed": report.processed,
+                "processed_at": report.processed_at,
+                "processed_by": report.processed_by.id if report.processed_by else None,
+            }
+
+            return JsonResponse({
+                "success": True,
+                "report": report_data
+            }, status=status.HTTP_200_OK)
+
+        except Report.DoesNotExist:
+            return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
     # def getReportsList(self, request):  # 관리자 -신고 리스트 가져오기
     #     user_token = request.headers.get("userToken")
     #     if not user_token:
@@ -190,4 +190,4 @@ class ReportController(viewsets.ViewSet):
     #
     #     except Exception as e:
     #         return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #
+
