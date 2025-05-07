@@ -144,6 +144,7 @@ GITHUB = {
     'TOKEN_REQUEST_URI': os.getenv('GITHUB_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('GITHUB_USER_INFO_REQUEST_URI'),
     'ADMIN_CODE': os.getenv('GITHUB_ADMIN_CODE'),
+    'SCOPE': os.getenv('GITHUB_SCOPE'),
 }
 
 META = {
