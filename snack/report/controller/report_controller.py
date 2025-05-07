@@ -96,41 +96,41 @@ class ReportController(viewsets.ViewSet):
         except Report.DoesNotExist:
             return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-    # def getReportsList(self, request):  # 관리자 -신고 리스트 가져오기
-    #     user_token = request.headers.get("userToken")
-    #     if not user_token:
-    #         return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
-    #
-    #     account_id = self.redisCacheService.getValueByKey(user_token)
-    #     if not account_id:
-    #         return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-    #
-    #     account = self.__accountService.findAccountById(account_id)
-    #     if not account or account.role_type.role_type != 'ADMIN':  # comment 에서 is_admin 수정하기
-    #         return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
-    #
-    #     reports = self.__reportService.getAllReports()
-    #     report_list = []
-    #
-    #     for r in reports:
-    #         report_data = {
-    #             "id": r.id,
-    #             "reporter_id": r.reporter.id,
-    #             "target_id": r.target_id,
-    #             "target_type": r.target_type,
-    #             "reason_type": r.reason_type,
-    #             "created_at": r.created_at,
-    #             "processed": r.processed,
-    #             "processed_at": r.processed_at,
-    #             "processed_by": r.processed_by.id if r.processed_by else None,
-    #         }
-    #         report_list.append(report_data)
-    #
-    #     return JsonResponse({
-    #         "success": True,
-    #         "reports": report_list
-    #     }, status=status.HTTP_200_OK)
-    #
+    def getReportsList(self, request):  # 관리자 -신고 리스트 가져오기
+        user_token = request.headers.get("userToken")
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
+
+        account_id = self.redisCacheService.getValueByKey(user_token)
+        if not account_id:
+            return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        account = self.__accountService.findAccountById(account_id)
+        if not account or account.role_type.role_type != 'ADMIN':  # comment 에서 is_admin 수정하기
+            return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        reports = self.__reportService.getAllReports()
+        report_list = []
+
+        for r in reports:
+            report_data = {
+                "id": r.id,
+                "reporter_id": r.reporter.id,
+                "target_id": r.target_id,
+                "target_type": r.target_type,
+                "reason_type": r.reason_type,
+                "created_at": r.created_at,
+                "processed": r.processed,
+                "processed_at": r.processed_at,
+                "processed_by": r.processed_by.id if r.processed_by else None,
+            }
+            report_list.append(report_data)
+
+        return JsonResponse({
+            "success": True,
+            "reports": report_list
+        }, status=status.HTTP_200_OK)
+
     #
     # def deleteReport(self, request, request_id):  # 관리자 -신고 삭제
     #     user_token = request.headers.get("userToken")
