@@ -60,7 +60,9 @@ INSTALLED_APPS = [
     'delete_account',
     'github_authentication',
     'meta_authentication',
-    'account_prefer'
+    'account_prefer',
+    'report',
+    #'mypage',
 ]
 
 MIDDLEWARE = [
@@ -119,6 +121,7 @@ NAVER = {
     'CLIENT_ID': os.getenv('NAVER_CLIENT_ID'),
     'CLIENT_SECRET': os.getenv('NAVER_CLIENT_SECRET'),
     'REDIRECT_URI': os.getenv('NAVER_REDIRECT_URI'),
+    'REDIRECT_URI_FOR_APP': os.getenv('NAVER_REDIRECT_URI_FOR_APP'),
     'TOKEN_REQUEST_URI': os.getenv('NAVER_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('NAVER_USER_INFO_REQUEST_URI'),
 }

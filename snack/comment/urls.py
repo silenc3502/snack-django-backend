@@ -13,6 +13,7 @@ urlpatterns = [
     path('author/<int:author_id>/', CommentController.as_view({'get': 'getAllCommentsByAuthor'}), name='get-comments-by-author'),
     path('delete/<int:comment_id>/', CommentController.as_view({'delete': 'deleteComment'}), name='delete-comment'),
     path('reply/', CommentController.as_view({'post': 'createReply'})),
+    path('update/<int:comment_id>/', CommentController.as_view({'put': 'updateComment'}), name='update-comment'),
 
 ]
 
