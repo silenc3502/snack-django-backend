@@ -131,35 +131,35 @@ class ReportController(viewsets.ViewSet):
             "reports": report_list
         }, status=status.HTTP_200_OK)
 
-    #
-    # def deleteReport(self, request, request_id):  # 관리자 -신고 삭제
-    #     user_token = request.headers.get("userToken")
-    #     if not user_token:
-    #         return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
-    #
-    #     account_id = self.redisCacheService.getValueByKey(user_token)
-    #     if not account_id:
-    #         return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-    #
-    #     account = self.__accountService.findAccountById(account_id)
-    #     if not account or account.role_type.role_type != 'ADMIN':
-    #         return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
-    #
-    #     try:
-    #         self.__reportService.deleteReportById(request_id)
-    #
-    #         return JsonResponse({
-    #             "success": True,
-    #             "message": "신고가 성공적으로 삭제되었습니다",
-    #             "report_id": request_id
-    #         }, status=status.HTTP_200_OK)
-    #
-    #     except Report.DoesNotExist:
-    #         return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
-    #
-    #     except Exception as e:
-    #         return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #
+
+    def deleteReport(self, request, request_id):  # 관리자 -신고 삭제
+        user_token = request.headers.get("userToken")
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
+
+        account_id = self.redisCacheService.getValueByKey(user_token)
+        if not account_id:
+            return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        account = self.__accountService.findAccountById(account_id)
+        if not account or account.role_type.role_type != 'ADMIN':
+            return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            self.__reportService.deleteReportById(request_id)
+
+            return JsonResponse({
+                "success": True,
+                "message": "신고가 성공적으로 삭제되었습니다",
+                "report_id": request_id
+            }, status=status.HTTP_200_OK)
+
+        except Report.DoesNotExist:
+            return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     #
     # def updateReportStatus(self, request, request_id):
     #     user_token = request.headers.get("userToken")
