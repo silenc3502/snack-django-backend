@@ -87,6 +87,8 @@ class BoardServiceImpl(BoardService):
         return False
 
     def deleteBoardWithToken(self, board_id: int, userToken: str) -> tuple[bool, int, str]:
+        print("삭제 요청 받은 board_id =", board_id)
+        print("삭제 요청 받은 userToken =", userToken)
         board = self.__boardRepository.findById(board_id)
         if not board:
             return False, 404, "게시글을 찾을 수 없습니다."

@@ -149,6 +149,7 @@ class BoardController(viewsets.ViewSet):
                 "board_id": board.id,
                 "title": board.title,
                 "author_nickname": board.getAuthorNickname(),
+                "author_account_id": board.author.account.id,
                 "created_at": board.getCreatedAt(),
                 "end_time": board.getEndTime(),
                 "status": board.status,
