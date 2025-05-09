@@ -34,4 +34,5 @@ urlpatterns = [
     path('account-prefer/', include('account_prefer.urls')),
     path('report/', include('report.urls')),
     #path('mypage/', include('mypage.urls')),
+    path('chat-history/', include('chat_history.urls')),
 ]

@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'account_prefer',
     'report',
     #'mypage',
+    'chat_history',
 ]
 
 MIDDLEWARE = [
