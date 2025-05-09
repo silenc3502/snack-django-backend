@@ -175,3 +175,40 @@ class AccountController(viewsets.ViewSet):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+      # 관리자 -정지된 사용자 목록 조회
+    def getSuspendedAccounts(self, request):
+        user_token = request.headers.get("userToken")
+
+        # 로그인 확인
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 관리자 계정 로그인 확인
+        admin_account_id = self.redisCacheService.getValueByKey(user_token)
+        if not admin_account_id:
+            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # # 관리자 권한 확인
+        # admin_account = self.__accountService.findAccountById(admin_account_id)
+        # if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+        #     return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            # 정지된 사용자 목록 조회
+            suspended_accounts = self.__accountService.getSuspendedAccounts()
+
+            # 응답 처리
+            result = [
+                {
+                    "id": account.id,
+                    "email": account.email,
+                    "reason": account.suspension_reason,
+                    "suspended_until": account.suspended_until.strftime('%Y-%m-%d %H:%M:%S') if account.suspended_until else "무기한 정지"
+                }
+                for account in suspended_accounts
+            ]
+            return Response({"success": True, "suspended_accounts": result}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
