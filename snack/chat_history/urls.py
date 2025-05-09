@@ -7,9 +7,9 @@ router = DefaultRouter()
 router.register(r'chat-history', ChatHistoryController, basename='chat-history')
 
 urlpatterns = [
-    path('save/', ChatHistoryController.as_view({'post': 'saveChatHistory'}), name='save-chat-history'),
-    path('list/', ChatHistoryController.as_view({'get': 'getChatHistory'}), name='list-chat-history'),
-    path('recent/', ChatHistoryController.as_view({'get': 'recentChatHistory'}), name='recent-chat-history'),
+    path('save', ChatHistoryController.as_view({'post': 'saveChatHistory'}), name='save-chat-history'),
+    path('list', ChatHistoryController.as_view({'get': 'getChatHistory'}), name='list-chat-history'),
+    path('recent', ChatHistoryController.as_view({'get': 'recentChatHistory'}), name='recent-chat-history'),
 ]
 
 # DRF router의 URL을 포함

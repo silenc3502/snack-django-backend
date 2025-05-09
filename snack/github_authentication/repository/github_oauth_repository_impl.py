@@ -1,3 +1,4 @@
+import uuid
 import requests
 
 from snack import settings
