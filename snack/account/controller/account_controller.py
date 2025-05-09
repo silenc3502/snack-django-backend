@@ -154,4 +154,24 @@ class AccountController(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
- 
+        # 관리자 -정지된 사용자 계정을 해제
+    def unsuspendAccount(self, request, account_id):
+        user_token = request.headers.get("userToken")
+
+        # 관리자 계정 로그인 확인
+        admin_account_id = self.redisCacheService.getValueByKey(user_token)
+        if not admin_account_id:
+            return Response({"error": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # # 관리자 권한 확인
+        # admin_account = self.__accountService.get_account_by_id(admin_account_id)
+        # if not admin_account or admin_account.role_type.role_type != "ADMIN":
+        #     return Response({"error": "관리자 권한이 필요합니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        # 정지 해제 처리
+        try:
+            self.__accountService.unsuspendAccountById(account_id)
+            return Response({"success": True, "message": "사용자 계정의 정지가 해제되었습니다."}, status=status.HTTP_200_OK)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
