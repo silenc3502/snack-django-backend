@@ -58,3 +58,21 @@ class AccountRepositoryImpl(AccountRepository):
             return account.account_path
         except ObjectDoesNotExist:
             return None
+
+    def updateAccountStatus(self, account: Account) -> None:
+        """사용자 계정 상태 업데이트"""
+        update_fields = ['account_status', 'suspension_reason', 'suspended_until']
+        account.save(update_fields=update_fields)
+
+    def findSuspendedAccounts(self):
+        """정지된 사용자 목록을 DB에서 조회"""
+        return Account.objects.filter(
+            account_status=1,
+            suspended_until__gt=now()
+        ) | Account.objects.filter(
+            account_status=1,
+            suspended_until__isnull=True
+        )
+        # """정지된 사용자 목록을 DB에서 조회"""
+        # return Account.objects.filter(account_status=1, suspended_until__gt=now()) # 현재 시점보다 정지 만료일이 큰 사용자만 조회
+        #

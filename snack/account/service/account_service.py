@@ -29,3 +29,27 @@ class AccountService(ABC):
     @abstractmethod
     def deleteAccountById(self, account_id: int) -> bool:
         pass
+
+    @abstractmethod
+    def checkAccountPath(self, email: str, login_path: str):
+        pass
+
+    @abstractmethod
+    def updateRoleToAdmin(self, account_id):
+        pass
+
+    @abstractmethod
+    def suspendAccountById(self, account_id: int, reason: str, duration: int = None):
+        pass
+
+    @abstractmethod
+    def isSuspended(self, account_id: int):
+        pass
+
+    @abstractmethod
+    def unsuspendAccountById(self, account_id: int):
+        pass
+
+    @abstractmethod
+    def getSuspendedAccounts(self):
+        pass

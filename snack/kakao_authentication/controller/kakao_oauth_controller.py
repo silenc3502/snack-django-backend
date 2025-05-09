@@ -55,6 +55,7 @@ class KakaoOauthController(viewsets.ViewSet):
                         birth = datetime.strptime(f"{birthyear}-{birthday}", "%Y-%m-%d").date()
                     except ValueError:
                         birth = None
+
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
                 print(f" conflict_message: {conflict_message}")  #  이 줄 추가
                 if conflict_message:
