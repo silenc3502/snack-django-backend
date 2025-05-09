@@ -38,3 +38,7 @@ class AccountRepository(ABC):
     @abstractmethod
     def findSuspendedAccounts(self):
         pass
+
+    @abstractmethod
+    def findBannedAccounts(self):
+        pass

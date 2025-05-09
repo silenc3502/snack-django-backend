@@ -57,3 +57,7 @@ class AccountService(ABC):
     @abstractmethod
     def banAccount(self, target_account_id: int, reason: str):
         pass
+
+    @abstractmethod
+    def getBannedAccounts(self):
+        pass

@@ -81,3 +81,7 @@ class AccountRepositoryImpl(AccountRepository):
         # """정지된 사용자 목록을 DB에서 조회"""
         # return Account.objects.filter(account_status=1, suspended_until__gt=now()) # 현재 시점보다 정지 만료일이 큰 사용자만 조회
         #
+
+    def findBannedAccounts(self):
+        """영구 탈퇴된 사용자 목록 조회"""
+        return Account.objects.filter(account_status=AccountStatus.BANNED.value).order_by('-banned_at')

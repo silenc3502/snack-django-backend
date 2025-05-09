@@ -192,3 +192,8 @@ class AccountServiceImpl(AccountService):
         # 상태 저장 (차단 사용자)
         self.__accountRepository.updateBannedAccountStatus(target_account)
         return target_account
+
+
+    def getBannedAccounts(self):
+        """영구 탈퇴된 사용자 목록 조회"""
+        return self.__accountRepository.findBannedAccounts()

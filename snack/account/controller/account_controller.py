@@ -248,3 +248,32 @@ class AccountController(viewsets.ViewSet):
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def getBannedAccounts(self, request):
+        user_token = request.headers.get("userToken")
+
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 관리자 계정 확인 (userToken -> admin_account_id)
+        admin_account_id = self.redisCacheService.getValueByKey(user_token)
+        if not admin_account_id:
+            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 관리자 권한 확인
+        admin_account = self.__accountService.findAccountById(admin_account_id)
+        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        # 영구 탈퇴된 사용자 조회
+        banned_accounts = self.__accountService.getBannedAccounts()
+        banned_list = [
+            {
+                "email": account.email,
+                "banned_reason": account.banned_reason,
+                "banned_at": account.banned_at.strftime('%Y-%m-%d %H:%M:%S') if account.banned_at else "날짜 없음"
+            }
+            for account in banned_accounts
+        ]
+
+        return JsonResponse({"success": True, "banned_accounts": banned_list}, status=status.HTTP_200_OK)
