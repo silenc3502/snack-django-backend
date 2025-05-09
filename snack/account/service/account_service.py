@@ -53,3 +53,7 @@ class AccountService(ABC):
     @abstractmethod
     def getSuspendedAccounts(self):
         pass
+
+    @abstractmethod
+    def banAccount(self, target_account_id: int, reason: str):
+        pass

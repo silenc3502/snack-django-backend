@@ -212,3 +212,39 @@ class AccountController(viewsets.ViewSet):
 
         except Exception as e:
             return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    # 관리자 -사용자 계정 차단 (영구 탈퇴)
+    def banAccount(self, request):
+        user_token = request.headers.get("userToken")
+        target_account_id = request.data.get("target_account_id")
+        reason = request.data.get("reason", "차단 사유")
+
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        if not target_account_id:
+            return JsonResponse({"error": "target_account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        # # 관리자 계정 로그인 확인
+        # admin_account_id = self.redisCacheService.getValueByKey(user_token)
+        # if not admin_account_id:
+        #     return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        admin_account = self.__accountService.findAccountById(admin_account_id)
+        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        # 대상 사용자 확인
+        target_account = self.__accountService.findAccountById(target_account_id)
+        if not target_account:
+            return Response({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            banned_account = self.__accountService.banAccount(target_account_id, reason)
+            return Response({
+                "success": True,
+                "message": f"사용자 {banned_account.email} (ID: {banned_account.id})이 차단되었습니다.",
+                "reason": banned_account.suspension_reason
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

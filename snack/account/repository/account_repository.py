@@ -28,7 +28,11 @@ class AccountRepository(ABC):
         pass
 
     @abstractmethod
-    def updateAccountStatus(self, account: Account) -> None:
+    def updateSuspendedAccountStatus(self, account: Account) -> None:
+        pass
+
+    @abstractmethod
+    def updateBannedAccountStatus(self, account: Account) -> None:
         pass
 
     @abstractmethod

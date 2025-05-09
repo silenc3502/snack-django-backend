@@ -59,9 +59,14 @@ class AccountRepositoryImpl(AccountRepository):
         except ObjectDoesNotExist:
             return None
 
-    def updateAccountStatus(self, account: Account) -> None:
+    def updateSuspendedAccountStatus(self, account: Account) -> None:
         """사용자 계정 상태 업데이트"""
         update_fields = ['account_status', 'suspension_reason', 'suspended_until']
+        account.save(update_fields=update_fields)
+
+    def updateBannedAccountStatus(self, account: Account) -> None:
+        """차단 사용자 계정 상태 업데이트"""
+        update_fields = ['account_status', 'banned_reason', 'suspended_until', 'suspension_reason']
         account.save(update_fields=update_fields)
 
     def findSuspendedAccounts(self):

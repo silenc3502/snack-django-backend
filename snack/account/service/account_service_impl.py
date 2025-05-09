@@ -121,7 +121,7 @@ class AccountServiceImpl(AccountService):
         target_account.suspended_until = suspended_until
 
         # 상태 저장
-        self.__accountRepository.updateAccountStatus(target_account)
+        self.__accountRepository.updateSuspendedAccountStatus(target_account)
         return target_account
 
     def isSuspended(self, account_id: int):
@@ -166,7 +166,7 @@ class AccountServiceImpl(AccountService):
         account.suspended_until = None
         account.suspension_reason = None
 
-        self.__accountRepository.updateAccountStatus(account)
+        self.__accountRepository.updateSuspendedAccountStatus(account)
 
     def getSuspendedAccounts(self):
         """정지된 사용자 목록 조회"""
@@ -174,3 +174,21 @@ class AccountServiceImpl(AccountService):
             return self.__accountRepository.findSuspendedAccounts()
         except Exception as e:
             raise ValueError(f"정지된 사용자 목록 조회 중 오류 발생: {str(e)}")
+
+    def banAccount(self, target_account_id: int, reason: str):
+        """사용자 계정 차단 (영구 탈퇴) 처리"""
+        target_account = self.__accountRepository.findById(target_account_id)
+        if not target_account:
+            raise ValueError("대상 사용자를 찾을 수 없습니다.")
+
+        # 이미 정지된 사용자인 경우에도 무시하고 바로 차단 처리
+        target_account.account_status = AccountStatus.BANNED.value
+        target_account.banned_reason = reason
+
+        # 정지 상태 관련 필드 초기화
+        target_account.suspended_until = None
+        target_account.suspension_reason = None
+
+        # 상태 저장 (차단 사용자)
+        self.__accountRepository.updateBannedAccountStatus(target_account)
+        return target_account

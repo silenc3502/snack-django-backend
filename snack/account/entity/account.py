@@ -27,7 +27,7 @@ class Account(models.Model):
     # 계정 status 정지 관련 필드
     suspended_until = models.DateTimeField(null=True, blank=True)  # 정지 만료일
     suspension_reason = models.TextField(null=True, blank=True)  # 정지 사유
-
+    banned_reason = models.TextField(null=True, blank=True)  # 차단 사유 (영구 정지)
 
     class Meta:
         db_table = 'account'

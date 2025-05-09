@@ -15,4 +15,5 @@ urlpatterns = [
     path("suspend/", AccountController.as_view({"post": "suspendAccount"}), name="suspend-account"),
     path("suspended-list/", AccountController.as_view({"get": "getSuspendedAccounts"}), name="get-suspended-accounts"),
     path("unsuspend/<int:account_id>/", AccountController.as_view({"put": "unsuspendAccount"}), name="unsuspend-account"),
+    path("ban/", AccountController.as_view({"post": "banAccount"}), name="ban-account"),
 ]
