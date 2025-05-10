@@ -99,3 +99,7 @@ class BoardServiceImpl(BoardService):
 
         self.__boardRepository.delete(board_id)
         return True, 200, "게시글이 삭제되었습니다."
+    
+    def countBoardsByRestaurant(self):
+        return self.__boardRepository.countBoardsByRestaurant()
+
