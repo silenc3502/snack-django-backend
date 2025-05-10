@@ -196,4 +196,7 @@ class AccountServiceImpl(AccountService):
 
     def getBannedAccounts(self):
         """영구 탈퇴된 사용자 목록 조회"""
-        return self.__accountRepository.findBannedAccounts()
+        try:
+            return self.__accountRepository.findBannedAccounts()
+        except Exception as e:
+            raise ValueError(f"차단된 사용자 목록 조회 중 오류 발생: {str(e)}")
