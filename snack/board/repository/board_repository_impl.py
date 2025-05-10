@@ -6,6 +6,7 @@ from board.repository.board_repository import BoardRepository
 from account_profile.entity.account_profile import AccountProfile
 from utility.s3_client import S3Client
 from restaurants.entity.restaurants import Restaurant
+from django.db.models import Count
 
 class BoardRepositoryImpl(BoardRepository):
     __instance = None
@@ -87,3 +88,12 @@ class BoardRepositoryImpl(BoardRepository):
             board.delete()
             return True
         return False
+    
+    def countBoardsByRestaurant(self):
+        """식당별 게시글 수 반환"""
+        return (
+            Board.objects.values('restaurant_id')
+            .annotate(board_count=Count('id'))
+            .order_by('restaurant_id')
+        )
+

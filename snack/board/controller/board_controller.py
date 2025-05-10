@@ -169,3 +169,7 @@ class BoardController(viewsets.ViewSet):
         deleted, status_code, message = self.__boardService.deleteBoardWithToken(board_id, userToken)
 
         return JsonResponse({"success": deleted, "message": message}, status=status_code)
+
+    def countBoardsPerRestaurant(self, request):
+        result = self.__boardService.countBoardsByRestaurant()
+        return JsonResponse({"success": True, "data": list(result)}, safe=False)
