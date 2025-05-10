@@ -78,7 +78,7 @@ class GoogleOauthController(viewsets.ViewSet):
             return JsonResponse({'error': str(e)}, status=500)
 
 
-    # def requestAccessTokenForApp(self, request):
+    # def requestAccessTokenForApp(self, request):  # flutter 구글 로그인을 웹 뷰 방식 -> 삭제
     #     code = request.GET.get('code')
     #     if not code:
     #         return JsonResponse({'error': 'code is required'}, status=400)

@@ -22,7 +22,7 @@ class ReportController(viewsets.ViewSet):
     redisCacheService = RedisCacheServiceImpl.getInstance()
 
 
-    def requestReport(self, request): # 신고 요청
+    def requestReport(self, request):   # 사용자 -신고 요청
         data = request.data
         user_token = request.headers.get("userToken")
         if not user_token:
@@ -61,7 +61,7 @@ class ReportController(viewsets.ViewSet):
             return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    def getReportDetail(self, request, request_id): # 관리자 -신고 상세보기
+    def getReportDetail(self, request, request_id):     # 관리자 -신고 상세보기
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
@@ -96,7 +96,7 @@ class ReportController(viewsets.ViewSet):
         except Report.DoesNotExist:
             return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-    def getReportsList(self, request):  # 관리자 -신고 리스트 가져오기
+    def getReportsList(self, request):    # 관리자 -신고 리스트 가져오기
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
@@ -106,7 +106,7 @@ class ReportController(viewsets.ViewSet):
             return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
         account = self.__accountService.findAccountById(account_id)
-        if not account or account.role_type.role_type != 'ADMIN':  # comment 에서 is_admin 수정하기
+        if not account or account.role_type.role_type != 'ADMIN':       # comment 에서 is_admin 수정하기
             return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         reports = self.__reportService.getAllReports()
@@ -132,7 +132,7 @@ class ReportController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
 
-    def deleteReport(self, request, request_id):  # 관리자 -신고 삭제
+    def deleteReport(self, request, request_id):    # 관리자 -신고 삭제
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
