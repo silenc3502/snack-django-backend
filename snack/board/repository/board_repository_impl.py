@@ -92,7 +92,8 @@ class BoardRepositoryImpl(BoardRepository):
     def countBoardsByRestaurant(self):
         """식당별 게시글 수 반환"""
         return (
-            Board.objects.values('restaurant_id')
+            Board.objects.filter(status='ongoing')
+            .values('restaurant_id')
             .annotate(board_count=Count('id'))
             .order_by('restaurant_id')
         )
