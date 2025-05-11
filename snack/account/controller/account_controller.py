@@ -101,8 +101,23 @@ class AccountController(viewsets.ViewSet):
             "success": True
         }, status=status.HTTP_200_OK)
 
-    # def __checkAdminPermission(self, user_token):
-    #     pass
+    # 관리자 로그인, 권한 확인
+    def __checkAdminPermission(self, user_token):
+        # 유저 토큰 확인
+        if not user_token:
+            return None, JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 관리자 계정 로그인 확인
+        admin_account_id = self.redisCacheService.getValueByKey(user_token)
+        if not admin_account_id:
+            return None, JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 관리자 권한 확인
+        admin_account = self.__accountService.findAccountById(admin_account_id)
+        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+            return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+
+        return admin_account, None
 
     #  관리자 -사용자 계정 정지 요청(SUSPEND)
     def suspendAccount(self, request):
@@ -111,20 +126,9 @@ class AccountController(viewsets.ViewSet):
         reason = request.data.get("reason", "정지 사유")
         duration = request.data.get("duration")  # 정지 기간 일수 (정수)
 
-        if not user_token:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-        if not target_account_id:
-            return JsonResponse({"error": "target_account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 관리자 계정 로그인 확인 (userToken -> admin_account_id)
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 관리자 권한 확인
-        admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response  # 관리자 로그인, 권한 확인
 
         # 대상 사용자 확인
         target_account = self.__accountService.findAccountById(target_account_id)
@@ -136,7 +140,7 @@ class AccountController(viewsets.ViewSet):
         if is_suspended:
             return Response({"error": message, "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
-
+        # 사용자 계정 정지
         try:
             suspended_account = self.__accountService.suspendAccountById(
                 target_account_id=target_account_id,
@@ -159,16 +163,19 @@ class AccountController(viewsets.ViewSet):
     def unsuspendAccount(self, request, account_id):
         user_token = request.headers.get("userToken")
 
-        # 관리자 계정 로그인 확인
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return Response({"error": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+        # 대상 사용자 확인
+        target_account = self.__accountService.findAccountById(account_id)  # URL에서 받아온 account_id 사용
+        if not target_account:
+            return JsonResponse({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        # 관리자 권한 확인
-        admin_account = self.__accountService.get_account_by_id(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != "ADMIN":
-            return Response({"error": "관리자 권한이 필요합니다."}, status=status.HTTP_403_FORBIDDEN)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
 
+        # 정지 여부 확인
+        if target_account.account_status != 1:
+            return JsonResponse({"error": "대상 사용자가 계정 정지 된 상태가 아닙니다.", "success": False},
+                                status=status.HTTP_400_BAD_REQUEST)
         # 정지 해제 처리
         try:
             self.__accountService.unsuspendAccountById(account_id)
@@ -181,19 +188,9 @@ class AccountController(viewsets.ViewSet):
     def getSuspendedAccounts(self, request):
         user_token = request.headers.get("userToken")
 
-        # 로그인 확인
-        if not user_token:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 관리자 계정 로그인 확인
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 관리자 권한 확인
-        admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
 
         try:
             # 정지된 사용자 목록 조회
@@ -218,32 +215,16 @@ class AccountController(viewsets.ViewSet):
     # 관리자 -사용자 계정 차단 (BAN, 영구 탈퇴)
     def banAccount(self, request):
         user_token = request.headers.get("userToken")
+
         target_account_id = request.data.get("target_account_id")
         reason = request.data.get("reason", "차단 사유")
 
-        print(user_token)
-        print(target_account_id)
-        print(reason)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
 
-        if not user_token:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
         if not target_account_id:
             return JsonResponse({"error": "target_account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 관리자 계정 로그인 확인
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 관리자 권한 확인
-        admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
-
-        # 대상 사용자 확인
-        target_account = self.__accountService.findAccountById(target_account_id)
-        if not target_account:
-            return Response({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             banned_account = self.__accountService.banAccountById(target_account_id, reason)
@@ -259,18 +240,9 @@ class AccountController(viewsets.ViewSet):
     def getBannedAccounts(self, request):
         user_token = request.headers.get("userToken")
 
-        if not user_token:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 관리자 계정 로그인 확인
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 관리자 권한 확인
-        admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
 
         # 영구 탈퇴된 사용자 조회
         try:
@@ -293,19 +265,10 @@ class AccountController(viewsets.ViewSet):
     def unbanAccount(self, request, account_id):  # URL에서 account_id 직접 받기
         user_token = request.headers.get("userToken")
 
-        if not user_token:
-            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
 
-        # 관리자 계정 로그인 확인
-        admin_account_id = self.redisCacheService.getValueByKey(user_token)
-        if not admin_account_id:
-            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 관리자 권한 확인
-        admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
-        #
         # 대상 사용자 확인
         target_account = self.__accountService.findAccountById(account_id)  # URL에서 받아온 account_id 사용
         if not target_account:
