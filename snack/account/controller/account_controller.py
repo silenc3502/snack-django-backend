@@ -119,8 +119,8 @@ class AccountController(viewsets.ViewSet):
 
         # 관리자 권한 확인
         admin_account = self.__accountService.findAccountById(admin_account_id)
-        # if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-        #     return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+            return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         return admin_account, None
 
@@ -139,6 +139,11 @@ class AccountController(viewsets.ViewSet):
         target_account = self.__accountService.findAccountById(target_account_id)
         if not target_account:
             return Response({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        # 영구 탈퇴 여부 확인
+        if target_account.account_status == 4:
+            return JsonResponse({"error": "대상 사용자는 영구 탈퇴 상태 입니다.", "success": False},
+                                status=status.HTTP_400_BAD_REQUEST)
 
         # 대상 사용자 정지 상태 확인 (이미 정지된 사용자 확인)
         is_suspended, message = self.__accountService.isSuspended(target_account_id)
@@ -168,9 +173,8 @@ class AccountController(viewsets.ViewSet):
         # 관리자 -정지된 사용자 계정을 해제
     def unsuspendAccount(self, request, account_id):
         user_token = request.headers.get("userToken")
-
-        # 대상 사용자 확인
         target_account = self.__accountService.findAccountById(account_id)  # URL에서 받아온 account_id 사용
+
         if not target_account:
             return JsonResponse({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
@@ -235,6 +239,16 @@ class AccountController(viewsets.ViewSet):
         if not target_account_id:
             return JsonResponse({"error": "target_account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
+        # 대상 사용자 계정 확인
+        target_account = self.__accountService.findAccountById(target_account_id)
+        if not target_account:
+            return JsonResponse({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+
+        # 영구탈퇴 여부 확인
+        if target_account.account_status == 4:
+            return JsonResponse({"error": "이미 영구탈퇴 된 사용자 입니다.", "success": False},
+                                status=status.HTTP_400_BAD_REQUEST)
+
         try:
             banned_account = self.__accountService.banAccountById(target_account_id, reason)
             decrypted_email = self.__decryptEmail(banned_account)
@@ -260,7 +274,7 @@ class AccountController(viewsets.ViewSet):
         if not target_account:
             return JsonResponse({"error": "대상 사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-        # 영구탈퇴 여부 확인
+        # 영구 탈퇴 여부 확인
         if target_account.account_status != 4:
             return JsonResponse({"error": "대상 사용자가 영구탈퇴 된 상태가 아닙니다.", "success": False},
                                 status=status.HTTP_400_BAD_REQUEST)
