@@ -65,7 +65,7 @@ class NaverOauthController(viewsets.ViewSet):
 
                 #print("asdfasdf")
                 account = self.accountService.checkEmailDuplication(email)
-                print(account)
+                print(account)  # 디버깅
                 is_new_account = False
                 if account is None:
                     is_new_account = True

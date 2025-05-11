@@ -41,6 +41,22 @@ class AccountServiceImpl(AccountService):
             return account
         return None
 
+    def checkAccountStatus(self, account):
+        """계정 상태 확인 및 처리"""
+        if account is None:
+            return None, None  # 계정이 존재하지 않음
+
+        if account.account_status == 1:  # Suspended (정지된 계정)
+            return None, "SUSPENDED"
+
+        elif account.account_status == 2:  # 탈퇴 회원 (재가입 처리)
+            return None, None
+
+        elif account.account_status == 4:  # Banned (영구 정지)
+            return None, "BANNED"
+
+        return account, None  # 정상 계정 (활성)
+
     def findAccountById(self, account_id: int) -> Account:
         """Account ID로 계정을 찾는다."""
         return self.__accountRepository.findById(account_id)
