@@ -18,3 +18,8 @@ class AccountProfileService(ABC):
     @abstractmethod
     def updateProfile(self, account_id: int, update_data: dict) -> AccountProfile:
         pass
+
+    @abstractmethod
+    def isNicknameAvailable(self, account_nickname: str) -> bool:
+        """닉네임 중복 확인"""
+        pass
