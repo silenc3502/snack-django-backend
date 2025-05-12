@@ -67,3 +67,7 @@ class AccountProfileServiceImpl(AccountProfileService):
 
         return self.__repository.save(profile)
 
+    def isNicknameAvailable(self, account_nickname: str) -> bool:
+        return not AccountProfile.objects.filter(account_nickname=account_nickname).exists()
+
+

@@ -72,6 +72,9 @@ class AccountProfileController(viewsets.ViewSet):
         account_id = request.headers.get("account-id")
         user_token = request.headers.get("usertoken")
 
+        if not account_id:  # user_token도 체크하지 않음
+            return JsonResponse({"error": "Account-Id가 필요합니다.", "success": False}, status=400)
+
         if not account_id or not user_token:
             return JsonResponse({"error": "Account-Id와 userToken이 필요합니다.", "success": False}, status=400)
 
@@ -84,3 +87,14 @@ class AccountProfileController(viewsets.ViewSet):
 
         return JsonResponse({"success": True, "account_id": updated_profile.account.id}, status=200)
 
+    def checkNicknameDuplication(self, request):
+        account_nickname = request.data.get("account_nickname")
+        if not account_nickname:
+            return JsonResponse({"error": "닉네임이 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_available = self.__profileService.isNicknameAvailable(account_nickname)
+
+        if is_available:
+            return JsonResponse({"success": True, "available": True}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({"success": False, "available": False, "error": "이미 사용 중인 닉네임입니다."}, status=status.HTTP_409_CONFLICT)
