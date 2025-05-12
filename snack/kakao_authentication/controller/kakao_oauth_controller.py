@@ -34,7 +34,7 @@ class KakaoOauthController(viewsets.ViewSet):
         try:
             tokenResponse = self.kakaoOauthService.requestAccessToken(code)
             accessToken = tokenResponse['access_token']
-
+            # accessToken = request.data.get('access_token') # AAA 포스트맨 확인용, 삭제
             with transaction.atomic():
                 userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
                 email = userInfo.get('kakao_account', {}).get('email', '')
@@ -62,6 +62,14 @@ class KakaoOauthController(viewsets.ViewSet):
                     return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
 
                 account = self.accountService.checkEmailDuplication(email)
+                account, status_message = self.accountService.checkAccountStatus(account)
+
+                if status_message:
+                    if "SUSPENDED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=414)
+                    elif "BANNED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=444)
+
                 is_new_account = False
                 if account is None:
                     is_new_account = True
@@ -84,12 +92,10 @@ class KakaoOauthController(viewsets.ViewSet):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
-    def requestAccessTokenForApp(self, request):
+    def requestAccessTokenForApp(self, request): # flutter
         code = request.GET.get('code')
         if not code:
             return JsonResponse({'error': 'code is required'}, status=400)
-
-        print(f"[KAKAO] Received code: {code}")
 
         try:
             tokenResponse = self.kakaoOauthService.requestAccessTokenForApp(code)
