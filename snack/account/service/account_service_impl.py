@@ -94,7 +94,7 @@ class AccountServiceImpl(AccountService):
         return True
 
 
-    def deactivate_account(self, account_id: int) -> bool:   # 휴면 계정 비활성화
+    def deactivateAccount(self, account_id: int) -> bool:   # 휴면 계정 비활성화
         try:
             account = Account.objects.get(id=account_id)
             account.account_status = AccountStatus.SUSPENDED.value
