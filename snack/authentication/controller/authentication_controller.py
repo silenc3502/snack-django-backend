@@ -19,7 +19,7 @@ class AuthenticationController(viewsets.ViewSet):
                 return JsonResponse({"message": "로그 아웃 성공"}, status=status.HTTP_200_OK)
             
             except Exception as e:
-                print(f"redis key 삭제 중 에러 발생: {e}")        #    AAA
+                print(f"redis key 삭제 중 에러 발생: {e}")        # AAA
                 return JsonResponse({"error": "코드 내부 에러"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return JsonResponse({"error": "userToken이 필요합니다"}, status=status.HTTP_400_BAD_REQUEST)
@@ -36,7 +36,7 @@ class AuthenticationController(viewsets.ViewSet):
             accountId = self.redisCacheService.getValueByKey(userToken)
 
             if accountId is None:
-                print("⚠️ Redis에서 userToken에 해당하는 accountId를 찾을 수 없음")       #    AAA
+                print("Redis에서 userToken에 해당하는 accountId를 찾을 수 없음")       # AAA
                 return JsonResponse({"error": "유효하지 않은 userToken입니다"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Redis에서 해당 키 삭제 (로그아웃 처리)
@@ -53,7 +53,6 @@ class AuthenticationController(viewsets.ViewSet):
             return JsonResponse({"error": "코드 내부 에러"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def requestGoogleLogout(self, request):
-        print("✅ Google Logout 요청 수신")
         postRequest = request.data
         userToken = postRequest.get("userToken")
 
@@ -63,7 +62,7 @@ class AuthenticationController(viewsets.ViewSet):
         try:
             # Redis에서 userToken을 기반으로 accountId 가져오기
             accountId = self.redisCacheService.getValueByKey(userToken)
-            print(f"✅ Redis에서 조회된 accountId: {accountId}")  # 디버깅 확인
+            print(f"Redis에서 조회된 accountId: {accountId}")  # AAA 디버깅 확인
 
             if accountId is None:
                 print(" Redis에서 userToken에 해당하는 accountId를 찾을 수 없음")      #    AAA
@@ -72,9 +71,9 @@ class AuthenticationController(viewsets.ViewSet):
             # Redis에서 해당 키 삭제 (로그아웃 처리)
             self.redisCacheService.deleteKey(userToken)
             self.redisCacheService.deleteKey(accountId)
-            print("✅ 구글 로그아웃 성공")                 # AAA 디버깅 확인
-            print(f" 유저 토큰 삭제 성공: {userToken}")              # AAA
-            print(f" 유저 accountId 삭제 성공: {accountId}")       # AAA
+            print("구글 로그아웃 성공")                             # AAA 디버깅 확인
+            print(f"유저 토큰 삭제 성공: {userToken}")              # AAA
+            print(f"유저 accountId 삭제 성공: {accountId}")        # AAA
 
             return JsonResponse({"message": "구글 로그아웃 성공"}, status=status.HTTP_200_OK)
 
@@ -82,6 +81,32 @@ class AuthenticationController(viewsets.ViewSet):
             print(f" 구글 로그아웃 중 에러 발생: {e}")           #    AAA
             return JsonResponse({"error": "코드 내부 에러"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def requestGithubLogout(self, request):
+        postRequest = request.data
+        userToken = postRequest.get("userToken")
+
+        if not userToken:
+            return JsonResponse({"error": "userToken이 필요합니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Redis에서 userToken을 기반으로 accountId 가져오기
+            accountId = self.redisCacheService.getValueByKey(userToken)
+            print(f" Redis에서 조회된 accountId: {accountId}")  # AAA 디버깅 확인
+
+            if accountId is None:
+                return JsonResponse({"error": "유효하지 않은 userToken입니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+            self.redisCacheService.deleteKey(userToken)
+            self.redisCacheService.deleteKey(accountId)
+            print("GitHub 로그아웃 성공")                    # AAA 디버깅 확인
+            print(f"유저 토큰 삭제 성공: {userToken}")        # AAA
+            print(f"유저 accountId 삭제 성공: {accountId}")  # AAA
+
+            return JsonResponse({"message": "GitHub 로그아웃 성공"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"GitHub 로그아웃 중 에러 발생: {e}")  # AAA 디버깅 확인
+            return JsonResponse({"error": "코드 내부 에러"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def requestUserTokenValidation(self, request):
         postRequest = request.data

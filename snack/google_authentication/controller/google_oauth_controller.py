@@ -86,51 +86,6 @@ class GoogleOauthController(viewsets.ViewSet):
             return JsonResponse({'error': str(e)}, status=500)
 
 
-    # def requestAccessTokenForApp(self, request):  # flutter 구글 로그인을 웹 뷰 방식 -> 삭제
-    #     code = request.GET.get('code')
-    #     if not code:
-    #         return JsonResponse({'error': 'code is required'}, status=400)
-    #
-    #     print(f"[GOOGLE] Received code: {code}")
-    #
-    #     try:
-    #         tokenResponse = self.googleOauthService.requestAccessTokenForApp(code)
-    #         accessToken = tokenResponse['access_token']
-    #         print(f"[GOOGLE] accessToken: {accessToken}")
-    #
-    #         with transaction.atomic():
-    #             userInfo = self.googleOauthService.requestUserInfo(accessToken)
-    #             print(f"[GOOGLE] userInfo: {userInfo}")
-    #
-    #             email = userInfo.get('email', '')
-    #             nickname = userInfo.get('name', '')
-    #
-    #             account = self.accountService.checkEmailDuplication(email)
-    #             if account is None:
-    #                 account = self.accountService.createAccount(email)
-    #                 self.accountProfileService.createAccountProfile(
-    #                     account.getId(), nickname
-    #                 )
-    #
-    #             userToken = self.__createUserTokenWithAccessToken(account, accessToken)
-    #
-    #             return HttpResponse(f"""
-    #                 <html>
-    #                   <body>
-    #                     <script>
-    #                       const userToken = '{userToken}';
-    #                       const email = '{email}';
-    #                       const nickname = '{nickname}';
-    #                       window.location.href = 'flutter://google-login-success?userToken=' + encodeURIComponent(userToken) + '&email=' + encodeURIComponent(email) + '&nickname=' + encodeURIComponent(nickname);
-    #                     </script>
-    #                   </body>
-    #                 </html>
-    #             """)
-    #
-    #     except Exception as e:
-    #         print(f"[GOOGLE] Error: {str(e)}")
-    #         return JsonResponse({'error': str(e)}, status=500)
-
 
     def requestUserToken(self, request):
         #print("point AA3 [Google] 받은 request.data:", request.data)
