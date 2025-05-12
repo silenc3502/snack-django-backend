@@ -48,12 +48,20 @@ class GoogleOauthController(viewsets.ViewSet):
                 subscribed = False
 
                 account = self.accountService.checkEmailDuplication(email)
-
                 if account:
                     conflict_message = self.accountService.checkAccountPath(email, account_path)
                     if conflict_message:
                         return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
-                
+
+                account, status_message = self.accountService.checkAccountStatus(account)
+                print(account, status_message)  # AAA 디버깅
+
+                if status_message:
+                    if "SUSPENDED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=414)
+                    elif "BANNED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=444)
+
                 is_new_account = False
                 if account is None:
                     is_new_account = True
