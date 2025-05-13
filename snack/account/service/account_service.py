@@ -23,7 +23,7 @@ class AccountService(ABC):
         pass
 
     @abstractmethod
-    def deactivate_account(self, account_id: int) -> bool:
+    def deactivateAccount(self, account_id: int) -> bool:
         pass
 
     @abstractmethod
