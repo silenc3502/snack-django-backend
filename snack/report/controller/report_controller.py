@@ -47,7 +47,7 @@ class ReportController(viewsets.ViewSet):
 
             # 신고 대상 확인
             if target_type == "BOARD":
-                board = self.__boardService.findBoarddById(content_id)
+                board = self.__boardService.findBoardById(content_id)
                 if not board:
                     return JsonResponse({"error": "신고한 게시글을 찾을 수 없습니다", "success": False},
                                         status=status.HTTP_404_NOT_FOUND)
