@@ -9,7 +9,7 @@ from account.service.account_service_impl import AccountServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 
 
-class AdminUserInfoController(ViewSet):
+class AdminUserInfoController(viewsets.ViewSet):
     __accountService = AccountServiceImpl.getInstance()
     __adminUserInfoService = AdminUserInfoServiceImpl.getInstance()
     redisCacheService = RedisCacheServiceImpl.getInstance()
@@ -32,6 +32,7 @@ class AdminUserInfoController(ViewSet):
 
         return admin_account, None
 
+
     # 관리자가 사용자의 모든 정보를 요청
     def getUserInfo(self, request, account_id):
         user_token = request.headers.get("userToken")
@@ -50,16 +51,7 @@ class AdminUserInfoController(ViewSet):
 
         return JsonResponse({"success": True, "user_info": user_info}, status=200)
 
-
-
     # 관리자가 모든 사용자 들의 정보를 요청
     def getUserInfoList(self, request):
         pass
 
-
-
-    # 사용자 이메일 복호화 하는 코드 추가
-
-    # 관리자가 맞는지 확인하는 코드 추가
-
-    # accountProfile 사용자 이름 복호화
