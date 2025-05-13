@@ -43,25 +43,6 @@ class AccountController(viewsets.ViewSet):
         account = self.__accountService.findAccountById(account_id)
         if not account:
             return JsonResponse({"error": "계정을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
-        #
-        # # 계정 상태 확인
-        # if account.account_status == 1:       # Suspended 일시 정지
-        #     return JsonResponse({"error": "정지된 계정입니다.", "success": False}, status=status.HTTP_414_FORBIDDEN)
-        #
-        # elif account.account_status == 4:      # 영구 정지
-        #     return JsonResponse({"error": "영구 정지된 계정입니다.", "success": False}, status=status.HTTP_444_FORBIDDEN)
-        #
-        # elif account.account_status == 2:     # 탈퇴 회원 재가입 -> 기존 계정 정지 상태, 신규 가입 처리
-        #     rejoin_account = self.__accountService.createAccount(
-        #         email=account.email,
-        #         account_path=account.account_path,
-        #         role_type=account.role_type
-        #     )
-        #     # Redis에 새로운 계정 ID 저장
-        #     self.redisCacheService.storeKeyValue(email=rejoin_account.email, value=rejoin__account.id)
-        #
-        #     return JsonResponse({"success": True, "account_id": rejoin__account.id}, status=status.HTTP_201_CREATED)
-        #
 
         decrypted_email = self.__decryptEmail(account)
 

@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from account.entity.account import Account
-from report.entity.report_type import ReportTargetType, ReportReasonType
+from report.entity.report_type import ReportReasonType
+from report.entity.target_type import ReportTargetType
 
 class Report(models.Model):
     id = models.AutoField(primary_key=True)

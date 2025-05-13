@@ -27,22 +27,48 @@ class ReportController(viewsets.ViewSet):
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
-        account_id = self.redisCacheService.getValueByKey(user_token)
 
+        account_id = self.redisCacheService.getValueByKey(user_token)
         if not account_id:
             return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
-        target_id = data.get("target_id")
+        content_id = data.get("content_id")
         target_type = data.get("target_type")
         reason_type = data.get("reason_type")
 
-        if not target_id or not target_type or not reason_type:
+        if not content_id or not target_type or not reason_type:
             return JsonResponse({"error": "필수 항목이 누락되었습니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             account = self.__accountService.findAccountById(account_id)
             if not account:
-                raise Exception("계정을 찾을 수 없습니다")
+                return JsonResponse({"error": "신고자의 계정을 찾을 수 없습니다", "success": False},
+                                    status=status.HTTP_404_NOT_FOUND)
+
+            # 신고 대상 확인
+            if target_type == "BOARD":
+                board = self.__boardService.findBoarddById(content_id)
+                if not board:
+                    return JsonResponse({"error": "신고한 게시글을 찾을 수 없습니다", "success": False},
+                                        status=status.HTTP_404_NOT_FOUND)
+                target_id = board.author  # 게시글 작성자 ID
+
+            elif target_type == "COMMENT":
+                comment = self.__commentService.findCommentById(content_id)
+                if not comment:
+                    return JsonResponse({"error": "신고한 댓글을 찾을 수 없습니다", "success": False},
+                                        status=status.HTTP_404_NOT_FOUND)
+                target_id = comment.author  # 댓글 작성자 ID
+
+            else:
+                return JsonResponse({"error": "유효하지 않은 신고 대상 타입입니다", "success": False},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            if not target_id:
+                return JsonResponse({
+                    "error": "신고 대상 사용자 ID를 확인할 수 없습니다",
+                    "success": False
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             report = self.__reportService.requestReport(
                 reporter=account,

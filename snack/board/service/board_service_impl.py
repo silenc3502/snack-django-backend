@@ -120,4 +120,3 @@ class BoardServiceImpl(BoardService):
     
     def countBoardsByRestaurant(self):
         return self.__boardRepository.countBoardsByRestaurant()
-
