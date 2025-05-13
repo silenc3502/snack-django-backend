@@ -43,7 +43,7 @@ class AccountProfileController(viewsets.ViewSet):
         if not user_token or not account_id:
             return JsonResponse({"error": "userToken과 account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
-        print(123)
+        print(123)  # AAA
 
         redis_account_id = self.redisCacheService.getValueByKey(user_token)
         if str(redis_account_id) != str(account_id):
