@@ -51,14 +51,14 @@ class ReportController(viewsets.ViewSet):
                 if not board:
                     return JsonResponse({"error": "신고한 게시글을 찾을 수 없습니다", "success": False},
                                         status=status.HTTP_404_NOT_FOUND)
-                target_id = board.author  # 게시글 작성자 ID
+                target_id = board.author.account.id   # 게시글 작성자 ID
 
             elif target_type == "COMMENT":
                 comment = self.__commentService.findCommentById(content_id)
                 if not comment:
                     return JsonResponse({"error": "신고한 댓글을 찾을 수 없습니다", "success": False},
                                         status=status.HTTP_404_NOT_FOUND)
-                target_id = comment.author  # 댓글 작성자 ID
+                target_id = comment.author.account.id  # 댓글 작성자 ID
 
             else:
                 return JsonResponse({"error": "유효하지 않은 신고 대상 타입입니다", "success": False},
