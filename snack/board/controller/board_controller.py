@@ -19,6 +19,7 @@ class BoardController(viewsets.ViewSet):
 
     def createBoard(self, request):
         postRequest = request.data
+        # userToken = request.headers.get("userToken")
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         account_id = self.__redisService.getValueByKey(userToken)
 
