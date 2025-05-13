@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from rest_framework import viewsets, status
 from datetime import datetime, timedelta
 from account.service.account_service_impl import AccountServiceImpl
+from account_profile.service.account_profile_service_impl import AccountProfileServiceImpl
 from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from rest_framework.response import Response
 
