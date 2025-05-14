@@ -72,6 +72,8 @@ class AccountProfileRepositoryImpl(AccountProfileRepository):
                 "account_age": age,
                 "account_pay": pay,
                 "account_sub": profile.account_sub,
+                "alarm_board_status": profile.alarm_board_status,
+                "alarm_comment_status": profile.alarm_comment_status
             }
 
         except ObjectDoesNotExist:
