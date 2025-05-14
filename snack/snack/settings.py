@@ -112,6 +112,7 @@ CORS_ALLOW_HEADERS = [
     'x-request-with',
     'usertoken',
     'account-id',
+    'x-account-id',
 ]
 
 CORS_EXPOSE_HEADERS = ['usertoken', 'account-id', 'authorization']

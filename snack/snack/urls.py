@@ -36,4 +36,5 @@ urlpatterns = [
     #path('mypage/', include('mypage.urls')),
     path('chat-history/', include('chat_history.urls')),
     path('account-scrap/', include('account_scrap.urls')),
+    path('admin-user-info/', include('admin_user_info.urls')),
 ]
