@@ -82,6 +82,7 @@ class BoardController(viewsets.ViewSet):
             "status": board.status,
             "image_url": board.getImageUrl(),
             "restaurant": board.restaurant.name if board.restaurant else None,
+            "restaurant_id": board.restaurant.id if board.restaurant else None,
             "is_author": is_author,
             "success": True
         }, status=status.HTTP_200_OK)
@@ -97,7 +98,7 @@ class BoardController(viewsets.ViewSet):
         title = postRequest.get("title")
         content = postRequest.get("content")
         end_time = postRequest.get("end_time")
-        restaurant_id = postRequest.get("restaurant")
+        restaurant_id = postRequest.get("restaurant_id")
         image_url = postRequest.get("image_url")
 
         try:
