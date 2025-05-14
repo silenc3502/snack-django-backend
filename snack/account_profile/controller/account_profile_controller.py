@@ -37,8 +37,8 @@ class AccountProfileController(viewsets.ViewSet):
         account_id = request.headers.get("account-id")
         user_token = request.headers.get("usertoken")
 
-        print(f"account_id: {account_id}")
-        print(f"user_token: {user_token}")
+        print(f"account_id: {account_id}")   # AAA
+        print(f"user_token: {user_token}")   # AAA
 
         if not user_token or not account_id:
             return JsonResponse({"error": "userToken과 account_id가 필요합니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)

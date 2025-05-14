@@ -3,5 +3,5 @@ from admin_user_info.controller.admin_user_info_controller import AdminUserInfoC
 
 urlpatterns = [
     path('<int:account_id>', AdminUserInfoController.as_view({'get': 'getUserInfo'}), name='request-user-info'),
-    #path('list', AdminUserInfoController.as_view({'get': 'getUserInfoList'}), name='user-info-list'),
+    path('list', AdminUserInfoController.as_view({'get': 'getUserInfoList'}), name='user-info-list'),
 ]
