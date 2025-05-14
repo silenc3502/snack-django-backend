@@ -56,10 +56,10 @@ class AdminUserInfoRepositoryImpl:
                 "nickname": user.get('accountprofile__account_nickname'),  # 닉네임은 복호화 필요 없음
                 "phone_num": decrypt_field(user.get('accountprofile__phone_num')),
                 "address": decrypt_field(user.get('accountprofile__account_add')),
-                "gender": user.get('accountprofile__account_sex'),
+                "gender": user.get('accountprofile__account_sex'),         # 성별은 복호화 필요 없음
                 "birth": decrypt_field(user.get('accountprofile__account_birth')),
                 "payment": self.__decrypt_payment(user.get('accountprofile__account_pay')),
-                "subscribed": user.get('accountprofile__account_sub')
+                "subscribed": user.get('accountprofile__account_sub')      # 구독여부 복호화 필요 없음
             }
         }
 
@@ -71,4 +71,19 @@ class AdminUserInfoRepositoryImpl:
             return json.loads(decrypted_payment) if decrypted_payment else {}
         except:
             return encrypted_payment
+
+    def findAllUsersInfo(self):
+        user_dict = (
+            Account.objects
+            .select_related('accountprofile')
+            .all()
+            .values(
+                'id', 'email', 'account_status', 'account_path', 'account_register',
+                'accountprofile__account_name', 'accountprofile__account_nickname',
+                'accountprofile__phone_num', 'accountprofile__account_add',
+                'accountprofile__account_sex', 'accountprofile__account_birth',
+                'accountprofile__account_pay', 'accountprofile__account_sub'
+            )
+        )
+        return [self.__formatDecryptedUserInfo(user) for user in user_dict]
 

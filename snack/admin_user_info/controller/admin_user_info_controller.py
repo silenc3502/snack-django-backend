@@ -51,7 +51,13 @@ class AdminUserInfoController(viewsets.ViewSet):
 
         return JsonResponse({"success": True, "user_info": user_info}, status=200)
 
-    # 관리자가 모든 사용자 들의 정보를 요청
-    def getUserInfoList(self, request):
-        pass
 
+    # 관리자가 모든 사용자들의 정보를 요청
+    def getUserInfoList(self, request):
+        user_token = request.headers.get("userToken")
+        admin_account, error_response = self.__checkAdminPermission(user_token)
+        if error_response:
+            return error_response
+
+        user_list = self.__adminUserInfoService.getUserInfoList()
+        return JsonResponse({"success": True, "user_list": user_list}, status=200)

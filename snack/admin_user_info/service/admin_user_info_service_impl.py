@@ -18,3 +18,7 @@ class AdminUserInfoServiceImpl:
 
     def getUserInfo(self, user_id):
         return self.__accountRepository.findUserById(user_id)
+
+
+    def getUserInfoList(self):
+        return self.__accountRepository.findAllUsersInfo()
