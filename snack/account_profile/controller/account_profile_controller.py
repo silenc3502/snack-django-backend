@@ -29,7 +29,9 @@ class AccountProfileController(viewsets.ViewSet):
             account_sex=postRequest.get("account_sex"),
             account_birth=postRequest.get("account_birth"),
             account_pay=postRequest.get("account_pay"),
-            account_sub=postRequest.get("account_sub")
+            account_sub=postRequest.get("account_sub"),
+            alarm_board_status=postRequest.get("alarm_board_status", True),
+            alarm_comment_status=postRequest.get("alarm_comment_status", True)
         )
         return JsonResponse({"success": True, "profile_id": profile.account.id}, status=status.HTTP_201_CREATED)
 
@@ -65,6 +67,8 @@ class AccountProfileController(viewsets.ViewSet):
             "account_pay": profile["account_pay"],
             "account_sub": profile["account_sub"],
             "account_age": profile["account_age"],
+            "alarm_board_status": profile["alarm_board_status"],
+            "alarm_comment_status": profile["alarm_comment_status"],
             "success": True
         }, status=status.HTTP_200_OK)
     
