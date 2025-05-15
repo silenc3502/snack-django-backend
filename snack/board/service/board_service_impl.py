@@ -76,7 +76,7 @@ class BoardServiceImpl(BoardService):
             board.title = title if title is not None else board.title
             board.content = content if content is not None else board.content
             board.end_time = end_time if end_time is not None else board.end_time
-            board.restaurant = restaurant if restaurant is not None else board.restaurant
+            board.restaurant = restaurant
             board.image_url = image_url if image_url is not None else board.image_url
 
             return self.__boardRepository.save(board)
