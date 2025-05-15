@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from rest_framework import viewsets, status
+
+from account_alarm.service.account_alarm_service_impl import AccountAlarmServiceImpl
 from comment.service.comment_service_impl import CommentServiceImpl
 from board.entity.board import Board
 from account_profile.entity.account_profile import AccountProfile
@@ -11,6 +13,7 @@ from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 
 class CommentController(viewsets.ViewSet):
     __commentService = CommentServiceImpl.getInstance()
+    __accountAlarmService = AccountAlarmServiceImpl.getInstance()
 
     def createComment(self, request):
         """새로운 댓글 생성"""
@@ -56,6 +59,7 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글, 작성자 또는 부모 댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         reply = self.__commentService.createComment(board, author, content, parent)
+        self.__accountAlarmService.createCommentAlarm(board, reply, parent)
 
         return JsonResponse({
             "success": True,

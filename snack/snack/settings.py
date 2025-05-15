@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'chat_history',
     'account_scrap',
     # 'django_crontab',
+    'account_alarm',
 ]
 
 
