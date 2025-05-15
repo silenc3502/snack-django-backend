@@ -31,6 +31,8 @@ class AccountAlarmController(viewsets.ViewSet):
         return JsonResponse({"success": True, "data": {"alarms": alarms}}, status=200)
 
 
+
+
     # account_alarm_status 권한상태 체크 board_title : nickname
 
     # def __checkUserAccount(self, request):

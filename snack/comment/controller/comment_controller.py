@@ -32,6 +32,8 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글 또는 작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         comment = self.__commentService.createComment(board, author, content)
+        if board.author.account.id != author.account.id:     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+            self.__accountAlarmService.createBoardAlarm(board, comment)
 
         return JsonResponse({
             "success": True,
@@ -59,7 +61,13 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글, 작성자 또는 부모 댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         reply = self.__commentService.createComment(board, author, content, parent)
-        self.__accountAlarmService.createCommentAlarm(board, reply, parent)
+        if board.author.account.id != author.account.id:     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+            self.__accountAlarmService.createBoardAlarm(board, comment)
+
+            # 게시글 생성자가 아닌 대댓글 알림
+        #     self.__accountAlarmService.createCommentAlarm(board, reply, author, parent)
+        # else:
+        #     self.__accountAlarmService.createCommentAlarm(board, reply, author, parent)
 
         return JsonResponse({
             "success": True,

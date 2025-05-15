@@ -20,13 +20,10 @@ class AccountAlarmRepositoryImpl:
         return cls.__instance
 
     def findUnreadAlarmsById(self, account_id):
-        """
-        사용자 ID로 미읽은 알림을 조회하고, 관련 댓글, 게시글, 댓글 작성자 정보를 함께 로드하여 반환.
-        """
         alarms = (
             AccountAlarm.objects
             .filter(recipient=account_id, is_unread=True)  # 미읽은 알림만 조회
-            .select_related('comment__author', 'board')  # 댓글, 댓글 작성자, 게시글을 JOIN (성능 최적화)
+            .select_related('comment__author__account', 'board')  # 댓글, 댓글 작성자, 게시글을 JOIN (성능 최적화)
             .order_by('-alarm_created_at')  # 최신 알림 우선 정렬
         )
 
@@ -41,7 +38,7 @@ class AccountAlarmRepositoryImpl:
                 "board_title": alarm.board.title,
                 "comment_id": comment.id if comment else None,
                 "comment_created_at": comment.created_at if comment else None,
-                "comment_author_id": author.id if author else None,
+                "comment_author_id": alarm.comment.author.account.id if alarm.comment and alarm.comment.author else None,
                 "comment_author_nickname": author.account_nickname if author else None,
                 "comment_content": comment.content if comment else None
             }
@@ -49,3 +46,12 @@ class AccountAlarmRepositoryImpl:
 
         return alarm_list
 
+
+    def saveBoardAlarm(self, board: Board, comment: Comment):
+        AccountAlarm.objects.create(
+            alarm_type="BOARD",
+            is_unread=True,
+            board=board,
+            recipient=board.author.account,
+            comment=comment
+        )

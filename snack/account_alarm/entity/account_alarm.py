@@ -18,11 +18,8 @@ class AccountAlarm(models.Model):
     is_unread = models.BooleanField(default=True)  # 알림 읽음 여부
     alarm_created_at = models.DateTimeField(auto_now_add=True)  # 알림 생성 시간
 
-    # Board 관련 정보
     board = models.ForeignKey(Board, on_delete=models.CASCADE)  # board_id
-    # 알림 수신자
-    recipient = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='recipient')  # account_id
-    # Comment 관련 정보
+    recipient = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='recipient')  # account_id, 알림 수신자
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True)  # comment_id
 
     class Meta:
