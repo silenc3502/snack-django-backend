@@ -81,11 +81,10 @@ class ReportController(viewsets.ViewSet):
                 "success": True,
                 "message": "신고가 정상적으로 접수되었습니다",
                 "report_id": report.id
-            }, status=status.HTTP_201_CREATED)
+            }, status=status.HTTP_200_OK)
 
 
         except ValidationError as ve:
-
             return JsonResponse({"error": str(ve), "success": False}, status=status.HTTP_409_CONFLICT)
 
         except Exception as e:

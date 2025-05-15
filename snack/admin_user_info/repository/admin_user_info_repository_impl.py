@@ -1,10 +1,11 @@
 from account.entity.account import Account
 from account_profile.entity.account_profile import AccountProfile
+from admin_user_info.repository.admin_user_info_repository import AdminUserInfoRepository
 from utility.encryption import AESCipher
 
 aes = AESCipher()  # AES 인스턴스 생성
 
-class AdminUserInfoRepositoryImpl:
+class AdminUserInfoRepositoryImpl(AdminUserInfoRepository):
     __instance = None
 
     def __new__(cls):
