@@ -46,6 +46,8 @@ class GoogleOauthController(viewsets.ViewSet):
                 birth = None
                 payment = ""
                 subscribed = False
+                alarm_board_status = True
+                alarm_comment_status = True
 
                 account = self.accountService.checkEmailDuplication(email)
                 if account:
@@ -68,7 +70,7 @@ class GoogleOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
@@ -107,6 +109,9 @@ class GoogleOauthController(viewsets.ViewSet):
         birthday = request.data.get('birthday', "")
         payment = request.data.get('payment', "")
         subscribed = request.data.get('subscribed', False)
+        alarm_board_status = request.data.get('alarm_board_status', True)
+        alarm_comment_status = request.data.get('alarm_comment_status', True)
+
 
         birth = None
         if birthday and birthyear:
@@ -141,7 +146,7 @@ class GoogleOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
                 #userToken = f"google-{uuid.uuid4()}"
                 self.redisCacheService.storeKeyValue(userToken, str(account.id))

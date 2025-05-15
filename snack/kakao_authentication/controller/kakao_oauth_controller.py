@@ -48,6 +48,9 @@ class KakaoOauthController(viewsets.ViewSet):
                 birthday = userInfo.get('kakao_account', {}).get('birthday', '')
                 payment = ""
                 subscribed = False
+                alarm_board_status = True
+                alarm_comment_status = True
+
 
                 birth = None
                 if birthday and birthyear:
@@ -76,7 +79,7 @@ class KakaoOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
@@ -151,6 +154,8 @@ class KakaoOauthController(viewsets.ViewSet):
         birthday = request.data.get('birthday', "")
         payment = request.data.get('payment', "")
         subscribed = request.data.get('subscribed', False)
+        alarm_board_status = request.data.get('alarm_board_status', True)
+        alarm_comment_status = request.data.get('alarm_comment_status', True)
 
         birth = None
         if birthday and birthyear:
@@ -177,7 +182,7 @@ class KakaoOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
