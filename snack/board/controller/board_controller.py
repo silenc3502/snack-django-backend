@@ -19,7 +19,6 @@ class BoardController(viewsets.ViewSet):
 
     def createBoard(self, request):
         postRequest = request.data
-        # userToken = request.headers.get("userToken")
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         account_id = self.__redisService.getValueByKey(userToken)
 
@@ -162,6 +161,10 @@ class BoardController(viewsets.ViewSet):
 
         if start_date and end_date:
             queryset = queryset.filter(end_time__range=[start_date, end_date])
+        elif start_date:
+            queryset = queryset.filter(end_time__gte=start_date)
+        elif end_date:
+            queryset = queryset.filter(end_time__range=[timezone.now().date(), end_date])
 
         if sort == "end_date":
             queryset = queryset.order_by('end_time')
