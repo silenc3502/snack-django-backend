@@ -49,6 +49,8 @@ class NaverOauthController(viewsets.ViewSet):
                 payment = ""
                 subscribed = False
                 age = ""
+                alarm_board_status = True
+                alarm_comment_status = True
 
 
                 birth = None
@@ -82,7 +84,7 @@ class NaverOauthController(viewsets.ViewSet):
                     nickname = self.__generateUniqueNickname()
                     print(nickname)  # AAA
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age
+                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
@@ -133,6 +135,9 @@ class NaverOauthController(viewsets.ViewSet):
                 payment = ''
                 subscribed = False
                 age = response.get('age', '')
+                alarm_board_status = True
+                alarm_comment_status = True
+
 
                 birth = None
                 if birthyear and birthday:
@@ -146,7 +151,7 @@ class NaverOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     self.accountProfileService.createAccountProfile(
                     account.id, name, nickname, phone_num, address, gender,
-                    birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age
+                    birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age, alarm_board_status, alarm_comment_status
                 )
 
                 self.accountService.updateLastUsed(account.id)
@@ -186,6 +191,8 @@ class NaverOauthController(viewsets.ViewSet):
         birthday = request.data.get('birthday', "")
         payment = request.data.get('payment', "")
         subscribed = request.data.get('subscribed', False)
+        alarm_board_status = request.data.get('alarm_board_status', True)
+        alarm_comment_status = request.data.get('alarm_comment_status', True)
 
         birth = None
         if birthday and birthyear:
@@ -212,7 +219,7 @@ class NaverOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
