@@ -1,6 +1,8 @@
 from admin_user_info.repository.admin_user_info_repository_impl import AdminUserInfoRepositoryImpl
+from admin_user_info.service.admin_user_info_service import AdminUserInfoService
 
-class AdminUserInfoServiceImpl:
+
+class AdminUserInfoServiceImpl(AdminUserInfoService):
     __instance = None
 
     def __new__(cls):
