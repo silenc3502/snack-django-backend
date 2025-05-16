@@ -18,23 +18,27 @@ class AccountAlarmController(viewsets.ViewSet):
 
     def __checkAlarmsStatus(self, account_id):
         account_profile = self.__accountProfileService.getProfileObjectByAccountId(account_id)
-
         if not account_profile:
             return {"success": False, "message": "프로필을 찾을 수 없습니다.", "alarms": []}
 
         if account_profile.alarm_board_status and account_profile.alarm_comment_status:
             alarms = self.__accountAlarmService.getUserAllAlarmList(account_id)
+            unread_count = self.__accountAlarmService.countUnreadAllAlarms(account_id)
 
         elif account_profile.alarm_board_status and not account_profile.alarm_comment_status:
             alarms = self.__accountAlarmService.getUserBoardAlarmList(account_id)
+            unread_count = self.__accountAlarmService.countUnreadBoardAlarms(account_id)
 
         elif not account_profile.alarm_board_status and account_profile.alarm_comment_status:
             alarms = self.__accountAlarmService.getUserCommentAlarList(account_id)
+            unread_count = self.__accountAlarmService.countUnreadCommentAlarms(account_id)
 
         else:
             alarms = []
+            unread_count = 0
 
-        return {"success": True, "alarms": alarms}
+        return {"success": True, "alarms": alarms, "unread_count": unread_count}
+
 
     def getUserAlarms(self, request):
         user_token = request.headers.get("userToken")
@@ -49,13 +53,17 @@ class AccountAlarmController(viewsets.ViewSet):
         if not alarm_response.get("success"):
             return JsonResponse({"error": alarm_response.get("message"), "success": False}, status=404)
 
-        return JsonResponse({"success": True, "data": {"alarms": alarm_response.get("alarms")}}, status=200)
-
+        return JsonResponse({
+            "success": True,
+            "data": {
+                "alarms": alarm_response.get("alarms"),
+                "unread_count": alarm_response.get("unread_count")
+            }
+        }, status=200)
 
     def readUserAlarm(self, request):
         user_token = request.headers.get("userToken")
         alarm_id = request.data.get("alarm_id")
-        # alarm_id = request.headers.get("alarm_id")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
 
