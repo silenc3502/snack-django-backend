@@ -31,9 +31,30 @@ class AccountAlarmController(viewsets.ViewSet):
         return JsonResponse({"success": True, "data": {"alarms": alarms}}, status=200)
 
 
+    def readUserAlarm(self, request):
+        user_token = request.headers.get("userToken")
+        alarm_id = request.data.get("alarm_id")
+        # alarm_id = request.headers.get("alarm_id")
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
+
+        account_id = self.redisCacheService.getValueByKey(user_token)
+        if not account_id:
+            return JsonResponse({"error": "로그인이 필요합니다.", "success": False}, status=401)
+
+        if not alarm_id:
+            return JsonResponse({"error": "alarm_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.__accountAlarmService.readAlarm(alarm_id)
+            return JsonResponse({"success": True, "message": "알림이 읽음 처리되었습니다."}, status=200)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "알림을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
 
-    # account_alarm_status 권한상태 체크 board_title : nickname
+
+
+
+    # account_alarm_status 권한상태 체크 board_title : nickname -> service
 
     # def __checkUserAccount(self, request):
     #     user_token = request.headers.get("userToken")

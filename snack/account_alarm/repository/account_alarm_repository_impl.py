@@ -43,8 +43,16 @@ class AccountAlarmRepositoryImpl:
                 "comment_content": comment.content if comment else None
             }
             alarm_list.append(alarm_data)
-
+            
         return alarm_list
+
+    def saveReadAlarmById(self, alarm_id):
+        try:
+            alarm = AccountAlarm.objects.get(id=alarm_id)
+            alarm.is_unread = False
+            alarm.save()
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("알림을 찾을 수 없습니다.")
 
 
     def saveBoardAlarm(self, board: Board, comment: Comment):
