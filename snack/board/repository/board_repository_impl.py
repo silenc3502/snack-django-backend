@@ -37,19 +37,24 @@ class BoardRepositoryImpl(BoardRepository):
             return None
 
     def findAll(self):
-        """모든 게시글을 조회한다."""
-        return Board.objects.all()
-    
+        return Board.objects.select_related("author__account", "restaurant").all()
+
     def searchBoards(self, keyword: str):
-        """검색어를 기반으로 게시글 검색 (게시글 제목 + 식당 주소 포함)"""
+        from account_profile.entity.account_profile import AccountProfile
+        from django.db.models import Q
 
-        title_matched_boards = Board.objects.filter(title__icontains=keyword)
+        # 1. 제목으로 검색
+        title_matched = Board.objects.filter(title__icontains=keyword)
 
-        restaurants = Restaurant.objects.filter(address__icontains=keyword)
+        # 2. 식당 주소로 검색
+        address_matched = Board.objects.filter(restaurant__address__icontains=keyword)
 
-        location_matched_boards = Board.objects.filter(restaurant__in=restaurants)
+        # 3. 작성자 닉네임으로 검색
+        matched_authors = AccountProfile.objects.filter(account_nickname__icontains=keyword)
+        author_matched = Board.objects.filter(author__in=matched_authors)
 
-        return title_matched_boards | location_matched_boards
+        # 4. 전체 결과 합치기
+        return title_matched | address_matched | author_matched
 
     def findByAuthor(self, author: AccountProfile):
         """작성자의 게시글을 조회한다."""
