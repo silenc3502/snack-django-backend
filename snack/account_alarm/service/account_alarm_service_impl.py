@@ -21,8 +21,14 @@ class AccountAlarmServiceImpl:
         return cls.__instance
 
 
-    def getUserAlarmList(self, account_id):
-        return self.__accountAlarmRepository.findUnreadAlarmsById(account_id)
+    def getUserAllAlarmList(self, account_id):
+        return self.__accountAlarmRepository.findUnreadAllAlarmsById(account_id)
+
+    def getUserBoardAlarmList(self, account_id):
+        return self.__accountAlarmRepository.findUnreadBoardAlarmsById(account_id)
+
+    def getUserCommentAlarList(self, account_id):
+        return self.__accountAlarmRepository.findUnreadCommentAlarmById(account_id)
 
     def readAlarm(self, alarm_id):
         return self.__accountAlarmRepository.saveReadAlarmById(alarm_id)
@@ -30,9 +36,12 @@ class AccountAlarmServiceImpl:
     def createBoardAlarm(self, board: Board, comment: Comment):
         return self.__accountAlarmRepository.saveBoardAlarm(board, comment)
 
-
     def createCommentAlarm(self, alarm_id):
         pass
+
+    def checkAlarmForBoard(self, account_id):
+        pass
+
 
     #
     # def createCommentAlarm(self, board: Board, comment: Comment, parent: Comment = None):
