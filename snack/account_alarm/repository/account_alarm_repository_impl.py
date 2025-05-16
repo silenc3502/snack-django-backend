@@ -48,8 +48,8 @@ class AccountAlarmRepositoryImpl:
     def findUnreadBoardAlarmsById(self, account_id):
         alarms = (
             AccountAlarm.objects
-            .filter(recipient=account_id, is_unread=True, alarm_type="BOARD")  # ✅ BOARD 타입만
-            .select_related('board')  # ✅ Board만 필요
+            .filter(recipient=account_id, is_unread=True, alarm_type="BOARD")
+            .select_related('board')
             .order_by('-alarm_created_at')
         )
 
@@ -69,8 +69,8 @@ class AccountAlarmRepositoryImpl:
     def findUnreadCommentAlarmsById(self, account_id):
         alarms = (
             AccountAlarm.objects
-            .filter(recipient=account_id, is_unread=True, alarm_type="COMMENT")  # ✅ COMMENT 타입만
-            .select_related('comment__author__account', 'board')  # ✅ 댓글 관련 정보 로드
+            .filter(recipient=account_id, is_unread=True, alarm_type="COMMENT")
+            .select_related('comment__author__account', 'board')
             .order_by('-alarm_created_at')
         )
 
@@ -93,6 +93,18 @@ class AccountAlarmRepositoryImpl:
             alarm_list.append(alarm_data)
 
         return alarm_list
+
+
+    def countUnreadAllAlarmsById(self, account_id):
+        return AccountAlarm.objects.filter(recipient=account_id, is_unread=True).count()
+
+    def countUnreadBoardAlarmsById(self, account_id):
+        return AccountAlarm.objects.filter(recipient=account_id, is_unread=True, alarm_type="BOARD").count()
+
+    def countUnreadCommentAlarmsById(self, account_id):
+        return AccountAlarm.objects.filter(recipient=account_id, is_unread=True, alarm_type="COMMENT").count()
+
+
     def saveReadAlarmById(self, alarm_id):
         try:
             alarm = AccountAlarm.objects.get(id=alarm_id)

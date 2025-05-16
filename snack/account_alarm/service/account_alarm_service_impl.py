@@ -36,6 +36,16 @@ class AccountAlarmServiceImpl:
     def createBoardAlarm(self, board: Board, comment: Comment):
         return self.__accountAlarmRepository.saveBoardAlarm(board, comment)
 
+
+    def countUnreadAllAlarms(self, account_id):
+        return self.__accountAlarmRepository.countUnreadAllAlarmsById(account_id)
+
+    def countUnreadBoardAlarms(self, account_id):
+        return self.__accountAlarmRepository.countUnreadBoardAlarmsById(account_id)
+
+    def countUnreadCommentAlarms(self, account_id):
+        return self.__accountAlarmRepository.countUnreadCommentAlarmsById(account_id)
+
     def createCommentAlarm(self, alarm_id):
         pass
 
