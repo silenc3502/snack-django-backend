@@ -157,7 +157,7 @@ class BoardController(viewsets.ViewSet):
             queryset = queryset.filter(title__icontains=title)
 
         if author:
-            queryset = queryset.filter(author__account__nickname__icontains=author)
+            queryset = queryset.filter(author__account_nickname__icontains=author)
 
         if start_date and end_date:
             queryset = queryset.filter(end_time__range=[start_date, end_date])
