@@ -32,7 +32,7 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글 또는 작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         comment = self.__commentService.createComment(board, author, content)
-        if board.author.account.id != author.account.id:     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+        if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자, 게시물 생성자만 알림 받으면 됌
             self.__accountAlarmService.createBoardAlarm(board, comment)
 
         return JsonResponse({

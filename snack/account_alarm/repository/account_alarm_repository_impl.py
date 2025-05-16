@@ -19,7 +19,7 @@ class AccountAlarmRepositoryImpl:
             cls.__instance = cls()
         return cls.__instance
 
-    def findUnreadAlarmsById(self, account_id):
+    def findUnreadAllAlarmsById(self, account_id):
         alarms = (
             AccountAlarm.objects
             .filter(recipient=account_id, is_unread=True)  # 미읽은 알림만 조회
@@ -43,9 +43,56 @@ class AccountAlarmRepositoryImpl:
                 "comment_content": comment.content if comment else None
             }
             alarm_list.append(alarm_data)
-            
         return alarm_list
 
+    def findUnreadBoardAlarmsById(self, account_id):
+        alarms = (
+            AccountAlarm.objects
+            .filter(recipient=account_id, is_unread=True, alarm_type="BOARD")  # ✅ BOARD 타입만
+            .select_related('board')  # ✅ Board만 필요
+            .order_by('-alarm_created_at')
+        )
+
+        alarm_list = []
+        for alarm in alarms:
+            alarm_data = {
+                "alarm_id": alarm.id,
+                "board_id": alarm.board.id,
+                "board_title": alarm.board.title,
+                "comment_id": alarm.comment.id if alarm.comment else None,
+                "alarm_created_at": alarm.alarm_created_at
+            }
+            alarm_list.append(alarm_data)
+
+        return alarm_list
+
+    def findUnreadCommentAlarmsById(self, account_id):
+        alarms = (
+            AccountAlarm.objects
+            .filter(recipient=account_id, is_unread=True, alarm_type="COMMENT")  # ✅ COMMENT 타입만
+            .select_related('comment__author__account', 'board')  # ✅ 댓글 관련 정보 로드
+            .order_by('-alarm_created_at')
+        )
+
+        alarm_list = []
+        for alarm in alarms:
+            comment = alarm.comment
+            author = comment.author if comment else None
+
+            alarm_data = {
+                "alarm_id": alarm.id,
+                "board_id": alarm.board.id,
+                "board_title": alarm.board.title,
+                "comment_id": comment.id if comment else None,
+                "comment_created_at": comment.created_at if comment else None,
+                "comment_author_id": comment.author.account.id if comment and comment.author else None,
+                "comment_author_nickname": author.account_nickname if author else None,
+                "comment_content": comment.content if comment else None,
+                "alarm_created_at": alarm.alarm_created_at
+            }
+            alarm_list.append(alarm_data)
+
+        return alarm_list
     def saveReadAlarmById(self, alarm_id):
         try:
             alarm = AccountAlarm.objects.get(id=alarm_id)

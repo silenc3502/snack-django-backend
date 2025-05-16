@@ -32,6 +32,9 @@ class AccountProfileServiceImpl(AccountProfileService):
         )
         return self.__repository.save(profile)
 
+    def getProfileObjectByAccountId(self, account_id: int):
+        return self.__repository.findByAccountProfileObject(account_id)
+
     def getProfileByAccountId(self, account_id: int) -> dict:
         """Account ID로 프로필을 찾는다."""
         return self.__repository.findByAccount(account_id)
