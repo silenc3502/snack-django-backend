@@ -32,7 +32,7 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글 또는 작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         comment = self.__commentService.createComment(board, author, content)
-        if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+        if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자-> 자기 알람 불필요, 게시물 생성자만 알림 받으면 됌
             self.__accountAlarmService.createBoardAlarm(board, comment)
 
         return JsonResponse({
@@ -61,13 +61,10 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글, 작성자 또는 부모 댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         reply = self.__commentService.createComment(board, author, content, parent)
-        if board.author.account.id != author.account.id:     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
-            self.__accountAlarmService.createBoardAlarm(board, comment)
-
-            # 게시글 생성자가 아닌 대댓글 알림
-        #     self.__accountAlarmService.createCommentAlarm(board, reply, author, parent)
-        # else:
-        #     self.__accountAlarmService.createCommentAlarm(board, reply, author, parent)
+        print("[DEBUG] 대댓글 생성 됌")  # AAA
+        if board.author.account.id != author.account.id:                     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+            print("[DEBUG] createBoardReplyAlarm called")  # AAA
+            self.__accountAlarmService.createBoardReplyAlarm(board, reply)
 
         return JsonResponse({
             "success": True,
@@ -177,13 +174,15 @@ class CommentController(viewsets.ViewSet):
         user_token = request.headers.get("Authorization", "").replace("Bearer ", "")
         user_id = RedisCacheServiceImpl.getInstance().getValueByKey(user_token)
 
+        if not user_token:
+            return JsonResponse({"error": "Authorization 헤더가 필요합니다.", "success": False},
+                                status=status.HTTP_400_BAD_REQUEST)
         if not user_id:
             return JsonResponse({"error": "user_id가 필요합니다.", "success": False}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = AccountProfile.objects.get(account__id=user_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
+        # try:
+        #     user = AccountProfile.objects.get(account__id=user_id)
+        # except ObjectDoesNotExist:
+        #     return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         deleted, status_code, message = self.__commentService.deleteComment(comment_id, user_token)
         return JsonResponse({"success": deleted, "message": message}, status=status_code)

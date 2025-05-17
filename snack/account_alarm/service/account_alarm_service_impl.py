@@ -30,11 +30,17 @@ class AccountAlarmServiceImpl:
     def getUserCommentAlarList(self, account_id):
         return self.__accountAlarmRepository.findUnreadCommentAlarmById(account_id)
 
+
     def readAlarm(self, alarm_id):
         return self.__accountAlarmRepository.saveReadAlarmById(alarm_id)
 
+
     def createBoardAlarm(self, board: Board, comment: Comment):
         return self.__accountAlarmRepository.saveBoardAlarm(board, comment)
+
+    def createBoardReplyAlarm(self, board: Board, comment: Comment):
+        return self.__accountAlarmRepository.saveBoardReplyAlarm(board, comment)
+
 
 
     def countUnreadAllAlarms(self, account_id):
@@ -46,45 +52,3 @@ class AccountAlarmServiceImpl:
     def countUnreadCommentAlarms(self, account_id):
         return self.__accountAlarmRepository.countUnreadCommentAlarmsById(account_id)
 
-    def createCommentAlarm(self, alarm_id):
-        pass
-
-    def checkAlarmForBoard(self, account_id):
-        pass
-
-
-    #
-    # def createCommentAlarm(self, board: Board, comment: Comment, parent: Comment = None):
-    #
-    #     # 게시물 작성자 알림 (BOARD 타입)
-    #     if board.author.account.id != comment.author.account.id:
-    #         self.__createAlarm(
-    #             recipient=board.author.account,
-    #             board=board,
-    #             comment=comment,
-    #             alarm_type="BOARD"
-    #         )
-    #
-    #     # 대댓글 알림 (COMMENT 타입)
-    #     if parent:
-    #         # 부모 댓글 작성자가 대댓글 작성자가 아닐 경우 (자기 대댓글 제외)
-    #         if parent.author.account.id != comment.author.account.id:
-    #             self.__createAlarm(
-    #                 recipient=parent.author.account,
-    #                 board=board,
-    #                 comment=comment,
-    #                 alarm_type="COMMENT"
-    #             )
-    #
-    #
-    # def __createAlarm(self, recipient: Account, board: Board, comment: Commnt, alarm_type: str):
-    #     """
-    #     일반적인 알림 생성 (다양한 상황에 사용 가능)
-    #     """
-    #     AccountAlarm.objects.create(
-    #         recipient=recipient,
-    #         board=board,
-    #         comment=comment,
-    #         alarm_type=alarm_type,
-    #         is_unread=True
-    #     )

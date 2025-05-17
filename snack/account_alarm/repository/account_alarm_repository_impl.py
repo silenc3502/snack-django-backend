@@ -122,3 +122,13 @@ class AccountAlarmRepositoryImpl:
             recipient=board.author.account,
             comment=comment
         )
+
+    def saveBoardReplyAlarm(self, board: Board, comment: Comment):
+        print(f"[DEBUG] Save Board Alarm: {board.id}, {comment.id}")  # AAA
+        AccountAlarm.objects.create(
+            alarm_type="COMMENT",
+            is_unread=True,
+            board=board,
+            recipient=board.author.account,
+            comment=comment,
+        )
