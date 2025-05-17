@@ -33,6 +33,7 @@ class CommentController(viewsets.ViewSet):
 
         comment = self.__commentService.createComment(board, author, content)
         if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자-> 자기 알람 불필요, 게시물 생성자만 알림 받으면 됌
+            print("DEBUG comment Alarm")
             self.__accountAlarmService.createBoardAlarm(board, comment)
 
         return JsonResponse({
@@ -185,6 +186,18 @@ class CommentController(viewsets.ViewSet):
         #     return JsonResponse({"error": "사용자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         deleted, status_code, message = self.__commentService.deleteComment(comment_id, user_token)
+
+        if deleted:
+            try:
+                self.__accountAlarmService.deleteCommentAlarm(comment_id)
+            except Exception as e:
+                print(f"[ERROR] 알림 삭제 중 오류 발생: {str(e)}")
+                return JsonResponse({
+                    "success": deleted,
+                    "message": message,
+                    "warning": "댓글 삭제는 완료되었으나 알림 삭제 중 오류가 발생했습니다."
+                }, status=status_code)
+
         return JsonResponse({"success": deleted, "message": message}, status=status_code)
 
     def updateComment(self, request, comment_id):

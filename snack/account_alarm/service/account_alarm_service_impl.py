@@ -52,3 +52,19 @@ class AccountAlarmServiceImpl:
     def countUnreadCommentAlarms(self, account_id):
         return self.__accountAlarmRepository.countUnreadCommentAlarmsById(account_id)
 
+
+    def deleteCommentAlarm(self, comment_id):
+        try:
+            self.__accountAlarmRepository.deleteAlarmByCommentId(comment_id)
+            print(f"[DEBUG] 알림이 삭제되었습니다.")            # AAA
+        except Exception as e:
+            print(f"[ERROR] 댓글 알림 삭제 실패: {str(e)}")                       # AAA
+            raise e
+
+    def deleteBoardRelatedAlams(self, board_id):
+        try:
+            delete_count = self.__accountAlarmRepository.deleteAlarmsByBoardId(board_id)
+            print(f"[DEBUG] {delete_count}개의 게시글 관련 알림이 삭제되었습니다.") # AAA
+        except Exception as e:
+            print(f"[ERROR] 게시글 알림 삭제 중 오류 발생: {str(e)}")  # AAA
+            raise e

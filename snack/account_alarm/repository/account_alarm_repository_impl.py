@@ -132,3 +132,11 @@ class AccountAlarmRepositoryImpl:
             recipient=board.author.account,
             comment=comment,
         )
+
+    def deleteAlarmByCommentId(self, comment_id):
+        return AccountAlarm.objects.filter(comment_id=comment_id).delete()
+
+
+    def deleteAlarmsByBoardId(self, board_id):
+        delete_count, _ = AccountAlarm.objects.filter(board_id=board_id).delete()
+        return delete_count
