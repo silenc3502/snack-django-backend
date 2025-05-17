@@ -33,8 +33,8 @@ class CommentController(viewsets.ViewSet):
 
         comment = self.__commentService.createComment(board, author, content)
         if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자-> 자기 알람 불필요, 게시물 생성자만 알림 받으면 됌
-            print("DEBUG comment Alarm")
-            self.__accountAlarmService.createBoardAlarm(board, comment)
+            print("DEBUG comment Alarm")  #     AAA
+            self.__accountAlarmService.createCommentAlarmToBoard(board, comment)
 
         return JsonResponse({
             "success": True,
@@ -62,10 +62,20 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글, 작성자 또는 부모 댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         reply = self.__commentService.createComment(board, author, content, parent)
-        print("[DEBUG] 대댓글 생성 됌")  # AAA
-        if board.author.account.id != author.account.id:                     # 게시물 생성자 = 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+        # 게시물 생성자에게 알림 (자기 댓글 제외)
+        if board.author.account.id != author.account.id:   # 게시물 생성자 != 댓글 생성자, 게시물 생성자만 알림 받으면 됌
             print("[DEBUG] createBoardReplyAlarm called")  # AAA
-            self.__accountAlarmService.createBoardReplyAlarm(board, reply)
+            self.__accountAlarmService.createReplyCommentAlarmToBoard(board, reply)
+
+        # 부모 댓글 작성자에게 알림 (자기 댓글 제외)
+        if parent.author.account.id != author.account.id:
+            self.__accountAlarmService.createReplyCommentAlarmToParent(board, reply, parent)
+
+        # 부모 댓글이 같은 자식 댓글 작성자에게 알림 (자기 댓글 제외)
+        child_replies = self.__commentService.findChildRepliesByParent(parent)
+        for reply in child_replies:
+            if reply.author.account.id != author.account.id:  # 자기 자신 제외
+                self.__accountAlarmService.createReplyCommentAlarmToChild(board, reply, reply.author.account)
 
         return JsonResponse({
             "success": True,
