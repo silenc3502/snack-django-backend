@@ -54,5 +54,5 @@ class CommentServiceImpl(CommentService):
         return deleted, 200, "댓글이 삭제되었습니다." if deleted else (False, 500, "삭제 실패")
 
 
-    def findChildRepliesByParent(self, parent):
-        return self.__commentRepository.findRepliesByParent(parent)
+    def findChildRepliesByParent(self, parent, author):
+        return self.__commentRepository.findRepliesByParent(parent, author)

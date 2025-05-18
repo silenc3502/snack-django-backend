@@ -72,10 +72,11 @@ class CommentController(viewsets.ViewSet):
             self.__accountAlarmService.createReplyCommentAlarmToParent(board, reply, parent)
 
         # 부모 댓글이 같은 자식 댓글 작성자에게 알림 (자기 댓글 제외)
-        child_replies = self.__commentService.findChildRepliesByParent(parent)
-        for reply in child_replies:
-            if reply.author.account.id != author.account.id:  # 자기 자신 제외
-                self.__accountAlarmService.createReplyCommentAlarmToChild(board, reply, reply.author.account)
+        child_replies = self.__commentService.findChildRepliesByParent(parent, author)
+        # child_replies = Comment.objects.filter(parent=parent).exclude(author=author)
+        for child_reply in child_replies:
+            if child_reply.author.account.id != author.account.id:
+                self.__accountAlarmService.createReplyCommentAlarmToChild(board, reply, child_reply.author.account)
 
         return JsonResponse({
             "success": True,

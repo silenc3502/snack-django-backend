@@ -134,6 +134,24 @@ class AccountAlarmRepositoryImpl(AccountAlarmRepository):
             comment=comment,
         )
 
+    def saveReplyAlarmToParent(self, board, comment, parent):
+        AccountAlarm.objects.create(
+            alarm_type="COMMENT",
+            is_unread=True,
+            board=board,
+            recipient=parent.author.account,
+            comment=comment
+        )
+
+    def saveReplyAlarmToChild(self, board, comment, recipient):
+        AccountAlarm.objects.create(
+            alarm_type="COMMENT",
+            is_unread=True,
+            board=board,
+            recipient=recipient,
+            comment=comment
+        )
+
     def deleteAlarmByCommentId(self, comment_id):
         return AccountAlarm.objects.filter(comment_id=comment_id).delete()
 
