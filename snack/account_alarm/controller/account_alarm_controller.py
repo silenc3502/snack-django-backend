@@ -9,7 +9,6 @@ from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 
 class AccountAlarmController(viewsets.ViewSet):
     __accountService = AccountServiceImpl.getInstance()
-    # __commentService = CommentServiceImpl.getInstance()
     __accountAlarmService = AccountAlarmServiceImpl.getInstance()
     __accountProfileService = AccountProfileServiceImpl.getInstance()
     redisCacheService = RedisCacheServiceImpl.getInstance()

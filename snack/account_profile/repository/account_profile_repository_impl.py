@@ -109,3 +109,12 @@ class AccountProfileRepositoryImpl(AccountProfileRepository):
             return AccountProfile.objects.get(account_nickname=account_nickname)
         except AccountProfile.DoesNotExist:
             return None
+
+    def updateBoardAlarmSetting(self, account_id: int, alarm_board_status: bool):
+        try:
+            profile = AccountProfile.objects.get(account_id=account_id)
+            profile.alarm_board_status = alarm_board_status
+            profile.save()
+            return True
+        except AccountProfile.DoesNotExist:
+            return False

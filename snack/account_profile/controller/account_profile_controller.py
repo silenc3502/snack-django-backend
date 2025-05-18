@@ -102,3 +102,24 @@ class AccountProfileController(viewsets.ViewSet):
             return JsonResponse({"success": True, "available": True}, status=status.HTTP_200_OK)
         else:
             return JsonResponse({"success": False, "available": False, "error": "이미 사용 중인 닉네임입니다."}, status=status.HTTP_409_CONFLICT)
+
+    def updateBoardAlarmSetting(self, request):
+        user_token = request.headers.get("usertoken")
+        if not user_token:
+            return JsonResponse({"error": "userToken이 필요합니다.", "success": False}, status=400)
+
+        account_id = request.headers.get("account-id")
+        if not account_id:
+            return JsonResponse({"error": "account_id가 필요합니다.", "success": False}, status=401)
+
+        postRequest = request.data
+        alarm_board_status = postRequest.get("alarm_board_status")
+
+        if alarm_board_status is None:
+            return JsonResponse({"error": "alarm_board_status 값이 필요합니다.", "success": False}, status=400)
+
+        updated = self.__profileService.updateBoardAlarmSetting(account_id, alarm_board_status)
+        if updated:
+            return JsonResponse({"success": True, "message": "댓글 알림 설정이 업데이트되었습니다."}, status=200)
+        else:
+            return JsonResponse({"success": False, "message": "댓글 알림 설정 업데이트에 실패했습니다."}, status=500)
