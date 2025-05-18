@@ -79,6 +79,8 @@ class AccountProfileServiceImpl(AccountProfileService):
     def isNicknameAvailable(self, account_nickname: str) -> bool:
         return not AccountProfile.objects.filter(account_nickname=account_nickname).exists()
 
-    def updateBoardAlarmSetting(self, account_id: int, alarm_board_status: bool):
-        return self.__repository.updateBoardAlarmSetting(account_id, alarm_board_status)
+    def updateBoardAlarmStatus(self, account_id: int, alarm_board_status: bool):
+        return self.__repository.saveBoardAlarmStatus(account_id, alarm_board_status)
 
+    def updateCommentAlarmStatus(self, account_id: int, alarm_comment_status: bool):
+        return self.__repository.saveCommentAlarmStatus(account_id, alarm_comment_status)

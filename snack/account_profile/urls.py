@@ -12,6 +12,6 @@ urlpatterns = [
     path("get", AccountProfileController.as_view({"get": "getProfile"}), name="get-profile"),
     path("update", AccountProfileController.as_view({"patch": "updateProfile"}), name="update-profile"),
     path("check-nickname-duplication", AccountProfileController.as_view({"post": "checkNicknameDuplication"}), name="check-nickname-duplication"),
-    path('board-alarm-update', AccountProfileController.as_view({'put': 'updateBoardAlarmSetting'}), name='update-board-alarm-setting'),
-    # path('comment-alarm-update', AccountProfileController.as_view({'put': 'updateCommentAlarmSetting'}), name='update-comment-alarm-setting'),
+    path('update-board-alarm', AccountProfileController.as_view({'put': 'userUpdateBoardAlarm'}), name='update-board-alarm'),
+    path('update-comment-alarm', AccountProfileController.as_view({'put': 'userUpdateCommentAlarm'}), name='update-comment-alarm'),
 ]

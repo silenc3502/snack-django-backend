@@ -29,3 +29,7 @@ class CommentService(ABC):
     def deleteComment(self, comment_id: int) -> bool:
         """댓글을 삭제한다."""
         pass
+
+    @abstractmethod
+    def findChildRepliesByParent(self, parent, author):
+        pass
