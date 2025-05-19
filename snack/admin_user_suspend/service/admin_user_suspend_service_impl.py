@@ -21,7 +21,7 @@ class AdminUserSuspendServiceImpl(AdminUserSuspendService):
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
             cls.__instance.__accountRepository = AccountRepositoryImpl.getInstance()
-            cls.__instance.__adminUserSuspendRepository = AdminUserSuspendRepositoryImpl
+            cls.__instance.__adminUserSuspendRepository = AdminUserSuspendRepositoryImpl.getInstance()
         return cls.__instance
 
     @classmethod
@@ -77,7 +77,7 @@ class AdminUserSuspendServiceImpl(AdminUserSuspendService):
                     account.account_status = AccountStatus.ACTIVE.value
                     account.suspended_until = None
                     account.suspension_reason = None
-                    # self.__adminUserSuspendRepository.update_account(account)
+                    self.__adminUserSuspendRepository.updateSuspendedAccountStatus(account)
                     return False, None  # 정지 해제
 
             #  무기한 정지된 경우

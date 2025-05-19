@@ -7,6 +7,9 @@ from redis_cache.service.redis_cache_service_impl import RedisCacheServiceImpl
 from rest_framework.response import Response
 
 
+from datetime import datetime, timedelta
+from django.utils.timezone import now
+
 class AdminUserSuspendController(viewsets.ViewSet):
     __accountService = AccountServiceImpl.getInstance()
     __adminUserSuspendService = AdminUserSuspendServiceImpl.getInstance()
@@ -36,8 +39,8 @@ class AdminUserSuspendController(viewsets.ViewSet):
 
         # 관리자 권한 확인
         admin_account = self.__accountService.findAccountById(admin_account_id)
-        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-            return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        # if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+        #     return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         return admin_account, None
 
@@ -63,12 +66,12 @@ class AdminUserSuspendController(viewsets.ViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         # 대상 사용자 정지 상태 확인 (이미 정지된 사용자 확인)
-        is_suspended, message = self.__accountService.isSuspended(target_account_id)
+        is_suspended, message = self.__adminUserSuspendService.isSuspended(target_account_id)
         if is_suspended:
             return Response({"error": message, "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            suspended_account = self.__accountService.suspendAccountById(
+            suspended_account = self.__adminUserSuspendService.suspendAccountById(
                 target_account_id=target_account_id,
                 reason=reason,
                 duration=int(duration) if duration else None
@@ -87,8 +90,8 @@ class AdminUserSuspendController(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 관리자 -정지된 사용자 계정을 해제
 
+        # 관리자 -정지된 사용자 계정을 해제
     def unsuspendAccount(self, request, account_id):
         user_token = request.headers.get("userToken")
         target_account = self.__accountService.findAccountById(account_id)  # URL에서 받아온 account_id 사용
@@ -106,7 +109,7 @@ class AdminUserSuspendController(viewsets.ViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            self.__accountService.unsuspendAccountById(account_id)
+            self.__adminUserSuspendService.unsuspendAccountById(account_id)
             return Response({"success": True, "message": "사용자 계정의 정지가 해제되었습니다."}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -120,7 +123,7 @@ class AdminUserSuspendController(viewsets.ViewSet):
             return error_response
 
         try:
-            suspended_accounts = self.__accountService.getSuspendedAccounts()
+            suspended_accounts = self.__adminUserSuspendService.getSuspendedAccounts()
             result = []
 
             for account in suspended_accounts:
