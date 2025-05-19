@@ -147,7 +147,7 @@ class CommentController(viewsets.ViewSet):
                 "is_author": parent.author.account.id == account_id if parent.author else False,
                 "is_admin": is_admin,
                 "parent_id": None,
-                "replies_count": len(children_sorted),  # ✅ 전체 대댓글 수 포함
+                "replies_count": len(children_sorted),  #  전체 대댓글 수 포함
                 "replies": [
                     {
                         "comment_id": child.id,

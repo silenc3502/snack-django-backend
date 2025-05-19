@@ -38,7 +38,7 @@ class NaverOauthController(viewsets.ViewSet):
                 response = userInfo.get('response', {})
                 email = response.get('email', '')
                 name = response.get('nickname', '')
-                #print(name)
+                #print(name)   # AAA
                 account_path = "Naver"
                 role_type = RoleType.USER
                 phone_num = response.get('mobile', '')
