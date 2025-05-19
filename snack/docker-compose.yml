@@ -99,4 +99,4 @@ volumes:
 
 networks:
   app:
-    driver: bridge
+    external: true
