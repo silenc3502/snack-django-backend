@@ -36,13 +36,16 @@ class AccountAlarmServiceImpl(AccountAlarmService):
         return self.__accountAlarmRepository.saveCommentAlarmToBoard(board, comment)
 
     def createReplyCommentAlarmToBoard(self, board: Board, comment: Comment):
-        return self.__accountAlarmRepository.saveReplyAlarmToBoard(board, comment)
+        if board.author.account.id != comment.author.account.id:
+            self.__accountAlarmRepository.saveReplyAlarmToBoard(board, comment)
 
     def createReplyCommentAlarmToParent(self, board: Board, comment: Comment, parent: Comment):
-        self.__accountAlarmRepository.saveReplyAlarmToParent(board, comment, parent)
+        if parent.author.account.id != comment.author.account.id:
+            self.__accountAlarmRepository.saveReplyAlarmToParent(board, comment, parent)
 
     def createReplyCommentAlarmToChild(self, board: Board, comment: Comment, recipient: Account):
-        self.__accountAlarmRepository.saveReplyAlarmToChild(board, comment, recipient)
+        if recipient.id != comment.author.account.id:
+            self.__accountAlarmRepository.saveReplyAlarmToChild(board, comment, recipient)
 
 
 

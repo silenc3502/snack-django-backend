@@ -16,3 +16,11 @@ class AccountProfileRepository(ABC):
     def findByNickname(self, account_nickname: str):
         """Account Nickname을 이용해 AccountProfile을 찾는다."""
         pass
+
+    @abstractmethod
+    def saveBoardAlarmStatus(self, account_id: int, alarm_board_status: bool):
+        pass
+
+    @abstractmethod
+    def saveCommentAlarmStatus(self, account_id: int, alarm_comment_status: bool):
+        pass

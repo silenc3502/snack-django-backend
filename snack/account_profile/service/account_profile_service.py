@@ -23,3 +23,11 @@ class AccountProfileService(ABC):
     def isNicknameAvailable(self, account_nickname: str) -> bool:
         """닉네임 중복 확인"""
         pass
+
+    @abstractmethod
+    def updateBoardAlarmStatus(self, account_id: int, alarm_board_status: bool):
+        pass
+
+    @abstractmethod
+    def updateCommentAlarmStatus(self, account_id: int, alarm_comment_status: bool):
+        pass

@@ -29,3 +29,7 @@ class CommentRepository(ABC):
     def delete(self, comment_id: int):
         """댓글을 삭제한다."""
         pass
+
+    @abstractmethod
+    def findRepliesByParent(self, parent, author):
+        pass

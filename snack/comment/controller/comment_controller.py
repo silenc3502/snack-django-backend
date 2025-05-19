@@ -32,6 +32,7 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글 또는 작성자를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         comment = self.__commentService.createComment(board, author, content)
+        # 게시물 생성자에게 부모 댓글 알림
         if board.author.account.id != author.account.id:     # 게시물 생성자 != 댓글 생성자-> 자기 알람 불필요, 게시물 생성자만 알림 받으면 됌
             print("DEBUG comment Alarm")  #     AAA
             self.__accountAlarmService.createCommentAlarmToBoard(board, comment)
@@ -62,20 +63,30 @@ class CommentController(viewsets.ViewSet):
             return JsonResponse({"error": "게시글, 작성자 또는 부모 댓글을 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         reply = self.__commentService.createComment(board, author, content, parent)
-        # 게시물 생성자에게 알림 (자기 댓글 제외)
-        if board.author.account.id != author.account.id:   # 게시물 생성자 != 댓글 생성자, 게시물 생성자만 알림 받으면 됌
-            print("[DEBUG] createBoardReplyAlarm called")  # AAA
-            self.__accountAlarmService.createReplyCommentAlarmToBoard(board, reply)
+
+        # 중복 알림 방지(account_id, comment_id)
+        notified_users = set()
+
+        # 게시물 작성자에게 알림 (자기 댓글 제외)
+        if board.author.account.id != author.account.id:    # 게시물 생성자 != 댓글 생성자, 게시물 생성자만 알림 받으면 됌
+            if (board.author.account.id, reply.id) not in notified_users:
+                self.__accountAlarmService.createReplyCommentAlarmToBoard(board, reply)
+                notified_users.add((board.author.account.id, reply.id))
 
         # 부모 댓글 작성자에게 알림 (자기 댓글 제외)
         if parent.author.account.id != author.account.id:
-            self.__accountAlarmService.createReplyCommentAlarmToParent(board, reply, parent)
+            if (parent.author.account.id, reply.id) not in notified_users:
+                self.__accountAlarmService.createReplyCommentAlarmToParent(board, reply, parent)
+                notified_users.add((parent.author.account.id, reply.id))
 
-        # 부모 댓글이 같은 자식 댓글 작성자에게 알림 (자기 댓글 제외)
-        child_replies = self.__commentService.findChildRepliesByParent(parent)
-        for reply in child_replies:
-            if reply.author.account.id != author.account.id:  # 자기 자신 제외
-                self.__accountAlarmService.createReplyCommentAlarmToChild(board, reply, reply.author.account)
+        # 부모 댓글의 자식 댓글 작성자들에게 알림 (자기 댓글 제외)
+        child_replies = self.__commentService.findChildRepliesByParent(parent, author)
+        for child_reply in child_replies:
+            child_author_id = child_reply.author.account.id
+            if child_author_id != author.account.id:  # 부모 댓글 작성자의 대댓글 알림 제거
+                if (child_author_id, reply.id) not in notified_users:
+                    self.__accountAlarmService.createReplyCommentAlarmToChild(board, reply, child_reply.author.account)
+                    notified_users.add((child_author_id, reply.id))
 
         return JsonResponse({
             "success": True,
