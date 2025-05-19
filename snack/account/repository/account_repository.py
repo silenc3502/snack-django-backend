@@ -26,19 +26,19 @@ class AccountRepository(ABC):
     @abstractmethod
     def findAccountPath(self, email: str):
         pass
-
-    @abstractmethod
-    def updateSuspendedAccountStatus(self, account: Account) -> None:
-        pass
-
-    @abstractmethod
-    def updateBannedAccountStatus(self, account: Account) -> None:
-        pass
-
-    @abstractmethod
-    def findSuspendedAccounts(self):
-        pass
-
-    @abstractmethod
-    def findBannedAccounts(self):
-        pass
+    #
+    # @abstractmethod
+    # def updateSuspendedAccountStatus(self, account: Account) -> None:
+    #     pass
+    #
+    # @abstractmethod
+    # def updateBannedAccountStatus(self, account: Account) -> None:
+    #     pass
+    #
+    # @abstractmethod
+    # def findSuspendedAccounts(self):
+    #     pass
+    #
+    # @abstractmethod
+    # def findBannedAccounts(self):
+    #     pass
