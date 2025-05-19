@@ -27,6 +27,7 @@ class AdminUserInfoRepositoryImpl(AdminUserInfoRepository):
             .filter(id=user_id)
             .values(
                 'id', 'email', 'account_status', 'account_path', 'account_register',
+                'suspended_until', 'suspension_reason', 'banned_reason',
                 'accountprofile__account_name', 'accountprofile__account_nickname',
                 'accountprofile__phone_num', 'accountprofile__account_add',
                 'accountprofile__account_sex', 'accountprofile__account_birth',
@@ -52,6 +53,9 @@ class AdminUserInfoRepositoryImpl(AdminUserInfoRepository):
             "account_status": user['account_status'],
             "account_path": user['account_path'],
             "created_at": user['account_register'],
+            "suspended_until": user.get("suspended_until"),
+            "suspension_reason": user.get("suspension_reason"),
+            "banned_reason": user.get("banned_reason"),
             "profile": {
                 "name": decrypt_field(user.get('accountprofile__account_name')),
                 "nickname": user.get('accountprofile__account_nickname'),  # 닉네임은 복호화 필요 없음
@@ -80,6 +84,7 @@ class AdminUserInfoRepositoryImpl(AdminUserInfoRepository):
             .all()
             .values(
                 'id', 'email', 'account_status', 'account_path', 'account_register',
+                'suspended_until', 'suspension_reason', 'banned_reason',
                 'accountprofile__account_name', 'accountprofile__account_nickname',
                 'accountprofile__phone_num', 'accountprofile__account_add',
                 'accountprofile__account_sex', 'accountprofile__account_birth',
