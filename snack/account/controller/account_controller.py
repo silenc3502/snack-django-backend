@@ -60,12 +60,10 @@ class AccountController(viewsets.ViewSet):
     def updateLastUsed(self, request, email):
         """이메일 기반으로 Redis에서 account_id를 가져와 마지막 로그인 날짜 업데이트"""
         account_id = self.redisCacheService.getValueByKey(email)
-
         if not account_id:
             return JsonResponse({"error": "해당 이메일에 대한 계정 정보를 찾을 수 없습니다.", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
         updated_account = self.__accountService.updateLastUsed(account_id)
-
         if not updated_account:
             return JsonResponse({"error": "계정을 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
@@ -100,8 +98,8 @@ class AccountController(viewsets.ViewSet):
 
         # 관리자 권한 확인
         admin_account = self.__accountService.findAccountById(admin_account_id)
-        # if not admin_account or admin_account.role_type.role_type != 'ADMIN':
-        #     return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
+        if not admin_account or admin_account.role_type.role_type != 'ADMIN':
+            return None, JsonResponse({"error": "관리자 권한이 필요합니다.", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         return admin_account, None
 
