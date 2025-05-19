@@ -5,39 +5,71 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class HttpClient:
-    _client = None  # Singleton 관리
+    _admin_client = None
+    _ai_client = None
 
     @classmethod
-    def getClient(cls):
-        """httpx.Client 싱글톤 객체 반환 (동기)"""
-        if cls._client is None:
-            cls._client = httpx.Client(
+    def getAdminClient(cls):
+        """Fiber 서버 (Admin 용) 클라이언트"""
+        if cls._admin_client is None:
+            cls._admin_client = httpx.Client(
                 base_url=os.getenv("FIBER_URL"),
-                timeout=25  # 초 단위
+                timeout=25
             )
-        return cls._client
+        return cls._admin_client
 
     @classmethod
-    def post(cls, endpoint: str, data: dict) -> bool:
-        """Fiber 서버에 동기 POST 요청을 보냄"""
-        client = cls.getClient()
+    def getAIClient(cls):
+        """FastAPI 서버 (AI 용) 클라이언트"""
+        if cls._ai_client is None:
+            cls._ai_client = httpx.Client(
+                base_url=os.getenv("FASTAPI_URL"),
+                timeout=25
+            )
+        return cls._ai_client
 
+    @classmethod
+    def postToAdmin(cls, endpoint: str, data: dict) -> dict | bool:
+        """Admin 서버로 POST 요청"""
+        client = cls.getAdminClient()
         try:
-            response = client.post(endpoint, json=data)
+            print(f"❗ Sending request to Admin: {client.base_url}{endpoint}")
+            print(f"📝 Request Data: {data}")
 
+            response = client.post(endpoint, json=data)
             if response.status_code == 200:
                 return response.json()
             else:
-                print(f"❌ Failed to send request to Fiber: {response.status_code}")
+                print(f"❌ Admin 서버 응답 오류: {response.status_code}")
                 return False
-
         except httpx.RequestError as exc:
-            print(f"⚠️ An error occurred while sending request to Fiber: {str(exc)}")
+            print(f"⚠️ Admin 서버 요청 에러: {str(exc)}")
+            return False
+
+    @classmethod
+    def postToAI(cls, endpoint: str, data: dict) -> dict | bool:
+        """AI 서버로 POST 요청"""
+        client = cls.getAIClient()
+        try:
+            print(f"❗ Sending request to AI: {client.base_url}{endpoint}")
+            print(f"📝 Request Data: {data}")
+
+            response = client.post(endpoint, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"❌ AI 서버 응답 오류: {response.status_code}")
+                return False
+        except httpx.RequestError as exc:
+            print(f"⚠️ AI 서버 요청 에러: {str(exc)}")
             return False
 
     @classmethod
     def close(cls):
-        """httpx.Client 종료"""
-        if cls._client:
-            cls._client.close()
-            cls._client = None  # 객체 초기화
+        """모든 클라이언트 종료"""
+        if cls._admin_client:
+            cls._admin_client.close()
+            cls._admin_client = None
+        if cls._ai_client:
+            cls._ai_client.close()
+            cls._ai_client = None

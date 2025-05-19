@@ -1,6 +1,6 @@
 import requests
 
-from db_automation import settings
+from snack import settings
 from github_action_monitor.repository.github_action_monitor_repository import GithubActionMonitorRepository
 from utility.http_client import HttpClient
 

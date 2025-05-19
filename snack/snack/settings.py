@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'account_scrap',
     # 'django_crontab',
     'account_alarm',
+    'github_action_monitor'
 ]
 
 
@@ -156,6 +157,7 @@ GITHUB = {
     'USER_INFO_REQUEST_URI': os.getenv('GITHUB_USER_INFO_REQUEST_URI'),
     'ADMIN_CODE': os.getenv('GITHUB_ADMIN_CODE'),
     'SCOPE': os.getenv('GITHUB_SCOPE'),
+    'ACCESS_TOKEN': os.getenv('GITHUB_ACCESS_TOKEN'),
 }
 
 META = {
