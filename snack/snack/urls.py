@@ -38,4 +38,5 @@ urlpatterns = [
     path('account-scrap/', include('account_scrap.urls')),
     path('admin-user-info/', include('admin_user_info.urls')),
     path('account-alarm/', include('account_alarm.urls')),
+    path('github-action-monitor/', include('github_action_monitor.urls')),
 ]
