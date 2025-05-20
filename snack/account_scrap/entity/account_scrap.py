@@ -9,7 +9,7 @@ class AccountScrap(models.Model):
     author = models.ForeignKey(AccountProfile, on_delete=models.CASCADE)  # 저장한 사람
     created_at = models.DateTimeField(auto_now_add=True)  # 즐겨 찾기 등록 시간
     is_deleted = models.BooleanField(default=False)
-    
+    updated_at = models.DateTimeField(auto_now=True)  # 즐겨 찾기 수정 시간
     
     class Meta:
         db_table = 'account_scrap'

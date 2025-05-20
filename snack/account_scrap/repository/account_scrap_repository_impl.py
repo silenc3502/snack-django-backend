@@ -39,3 +39,9 @@ class AccountScrapRepositoryImpl(AccountScrapRepository):
             return AccountScrap.objects.get(restaurant=restaurant, author=author, is_deleted=False)
         except ObjectDoesNotExist:
             return None
+        
+    def findByRestaurantAndAuthorIncludingDeleted(self, restaurant: Restaurant, author: AccountProfile):
+        try:
+            return AccountScrap.objects.get(restaurant=restaurant, author=author)
+        except ObjectDoesNotExist:
+            return None

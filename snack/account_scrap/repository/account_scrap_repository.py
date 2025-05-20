@@ -19,3 +19,7 @@ class AccountScrapRepository(ABC):
     @abstractmethod
     def findByRestaurantAndAuthor(self, restaurant: Restaurant, author: AccountProfile):
         pass
+
+    @abstractmethod
+    def findByRestaurantAndAuthorIncludingDeleted(self, restaurant: Restaurant, author: AccountProfile):
+        pass
