@@ -10,6 +10,7 @@ class Report(models.Model):
     target_id = models.IntegerField()  # 신고 대상
     target_type = models.CharField(max_length=20, choices=ReportTargetType.choices)  # 신고된 곳(게시글, 댓글)
     reason_type = models.CharField(max_length=50, choices=ReportReasonType.choices)  # 신고 사유
+    content_id = models.IntegerField(null=True, blank=True) # 신고된 board_id, comment_id 둘 중 하나
     created_at = models.DateTimeField(auto_now_add=True)  # 신고 시점
     processed = models.BooleanField(default=False)  # 처리 여부
     processed_at = models.DateTimeField(null=True, blank=True)  # 처리된 시점

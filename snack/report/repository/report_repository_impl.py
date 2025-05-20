@@ -18,12 +18,13 @@ class ReportRepositoryImpl(ReportRepository):
             cls.__instance = cls()
         return cls.__instance
 
-    def saveReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str) ->Report:
+    def saveReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str, content_id: int) ->Report:
         report = Report.objects.create(
             reporter=reporter,
             target_id=target_id,
             target_type=target_type,
-            reason_type=reason_type
+            reason_type=reason_type,
+            content_id=content_id
         )
         return report
 
