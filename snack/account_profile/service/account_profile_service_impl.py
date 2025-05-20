@@ -51,7 +51,7 @@ class AccountProfileServiceImpl(AccountProfileService):
         from account.service.account_service_impl import AccountServiceImpl
         accountService = AccountServiceImpl.getInstance()
         account = accountService.findAccountById(account_id)
-        is_google_user = account.account_path == "google"
+        is_google_user = account.account_path.lower() == "google"
 
         # 수정 가능 항목만 업데이트
         if "account_nickname" in update_data:
