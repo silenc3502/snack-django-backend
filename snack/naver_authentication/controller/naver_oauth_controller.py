@@ -86,8 +86,10 @@ class NaverOauthController(viewsets.ViewSet):
                     self.accountProfileService.createAccountProfile(
                         account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age, alarm_board_status, alarm_comment_status
                     )
+                print(account)
 
                 self.accountService.updateLastUsed(account.id)
+                print(account.id)  # AAA
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
                 self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
