@@ -84,6 +84,7 @@ class KakaoOauthController(viewsets.ViewSet):
 
                 self.accountService.updateLastUsed(account.id)
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)

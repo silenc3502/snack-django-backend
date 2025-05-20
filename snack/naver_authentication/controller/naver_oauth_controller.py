@@ -89,6 +89,7 @@ class NaverOauthController(viewsets.ViewSet):
 
                 self.accountService.updateLastUsed(account.id)
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 print(userToken)  # AAA
