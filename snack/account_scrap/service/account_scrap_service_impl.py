@@ -20,8 +20,11 @@ class AccountScrapServiceImpl(AccountScrapService):
         return cls.__instance
 
     def createScrap(self, author: AccountProfile, restaurant: Restaurant) -> AccountScrap:
-        existing = self.__scrapRepository.findByRestaurantAndAuthor(restaurant, author)
+        existing = self.__scrapRepository.findByRestaurantAndAuthorIncludingDeleted(restaurant, author)
         if existing:
+            if existing.is_deleted:
+                existing.is_deleted = False
+                return self.__scrapRepository.save(existing)
             return existing  # 이미 스크랩한 경우는 기존 반환
         scrap = AccountScrap(restaurant=restaurant, author=author)
         return self.__scrapRepository.save(scrap)
