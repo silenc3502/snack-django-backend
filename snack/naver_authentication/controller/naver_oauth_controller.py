@@ -84,7 +84,7 @@ class NaverOauthController(viewsets.ViewSet):
                     nickname = self.__generateUniqueNickname()
                     print(nickname)  # AAA
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age, alarm_board_status, alarm_comment_status
+                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
                 print(account)
 
