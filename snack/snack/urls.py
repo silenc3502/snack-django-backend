@@ -37,6 +37,8 @@ urlpatterns = [
     path('chat-history/', include('chat_history.urls')),
     path('account-scrap/', include('account_scrap.urls')),
     path('admin-user-info/', include('admin_user_info.urls')),
+    path('admin-user-ban/', include('admin_user_ban.urls')),
+    path('admin-user-suspend/', include('admin_user_suspend.urls')),
     path('account-alarm/', include('account_alarm.urls')),
     path('github-action-monitor/', include('github_action_monitor.urls')),
 ]

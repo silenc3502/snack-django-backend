@@ -74,7 +74,8 @@ class ReportController(viewsets.ViewSet):
                 reporter=account,
                 target_id=target_id,
                 target_type=target_type,
-                reason_type=reason_type
+                reason_type=reason_type,
+                content_id=content_id
             )
 
             return JsonResponse({
@@ -112,6 +113,7 @@ class ReportController(viewsets.ViewSet):
                 "target_id": report.target_id,
                 "target_type": report.target_type,
                 "reason_type": report.reason_type,
+                "content_id": report.content_id,
                 "created_at": report.created_at,
                 "processed": report.processed,
                 "processed_at": report.processed_at,

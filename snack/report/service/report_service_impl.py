@@ -20,19 +20,20 @@ class ReportServiceImpl(ReportService):
             cls.__instance = cls()
         return cls.__instance
 
-    def requestReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str) -> Report:
+    def requestReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str, content_id: int) -> Report:
 
         # 중복 신고 확인
         existing_report = Report.objects.filter(
             reporter=reporter,
             target_id=target_id,
-            target_type=target_type
+            target_type=target_type,
+            content_id=content_id
         ).first()
 
         if existing_report:
             raise ValidationError("이미 해당 항목을 신고하였습니다.")
 
-        report = self.__reportRepository.saveReport(reporter, target_id, target_type, reason_type)
+        report = self.__reportRepository.saveReport(reporter, target_id, target_type, reason_type, content_id)
         return report
 
     def getReportById(self, report_id: int) -> Report:

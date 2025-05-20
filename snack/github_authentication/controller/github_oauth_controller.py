@@ -94,6 +94,8 @@ class GithubOauthController(viewsets.ViewSet):
 
                 userToken = f"github-{uuid.uuid4()}"
                 self.redisCacheService.storeKeyValue(userToken, account.id)
+                self.redisCacheService.storeKeyValue(account.id, accessToken)
+
 
                 self.accountService.updateLastUsed(account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)

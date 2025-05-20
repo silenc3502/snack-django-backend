@@ -33,8 +33,13 @@ class AccountScrapController(viewsets.ViewSet):
         return JsonResponse({"success": success}, status=status.HTTP_200_OK if success else status.HTTP_404_NOT_FOUND)
 
     def getMyScraps(self, request):
-        userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
+        raw_header = request.headers.get("Authorization", "")
+        userToken = raw_header.replace("Bearer ", "")
+        print("🧪 Raw Authorization:", raw_header)
+        print("🧪 Extracted Token:", userToken)
+
         account_id = self.__redisService.getValueByKey(userToken)
+        print("🧪 Redis account_id:", account_id)
 
         if not account_id:
             return JsonResponse({"error": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)

@@ -6,7 +6,7 @@ from typing import List
 class ReportService(ABC):
 
     @abstractmethod
-    def requestReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str):
+    def requestReport(self, reporter: Account, target_id: int, target_type: str, reason_type: str, content_id: int):
         pass
 
     @abstractmethod

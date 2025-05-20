@@ -38,7 +38,7 @@ class NaverOauthController(viewsets.ViewSet):
                 response = userInfo.get('response', {})
                 email = response.get('email', '')
                 name = response.get('nickname', '')
-                #print(name)
+                #print(name)   # AAA
                 account_path = "Naver"
                 role_type = RoleType.USER
                 phone_num = response.get('mobile', '')
@@ -84,11 +84,14 @@ class NaverOauthController(viewsets.ViewSet):
                     nickname = self.__generateUniqueNickname()
                     print(nickname)  # AAA
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, age, alarm_board_status, alarm_comment_status
+                        account.id, name, nickname, phone_num, address, gender, birth.strftime("%Y-%m-%d") if birth else None, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
+                print(account)
 
                 self.accountService.updateLastUsed(account.id)
+                print(account.id)  # AAA
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 print(userToken)  # AAA
