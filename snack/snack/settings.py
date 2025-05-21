@@ -67,7 +67,10 @@ INSTALLED_APPS = [
     'account_scrap',
     # 'django_crontab',
     'account_alarm',
-    'github_action_monitor'
+    'github_action_monitor',
+    'orders',
+    'payments',
+    'subscribe',
 ]
 
 

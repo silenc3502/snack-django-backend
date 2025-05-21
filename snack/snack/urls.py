@@ -41,4 +41,7 @@ urlpatterns = [
     path('admin-user-suspend/', include('admin_user_suspend.urls')),
     path('account-alarm/', include('account_alarm.urls')),
     path('github-action-monitor/', include('github_action_monitor.urls')),
+    path('orders/', include('orders.urls')),
+    path('payments/', include('payments.urls')),
+    path('subscribe/', include('subscribe.urls')),
 ]
