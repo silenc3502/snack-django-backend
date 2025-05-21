@@ -50,13 +50,17 @@ def get_user_info_from_token(request) -> tuple[int | None, bool]:
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
     redis = RedisCacheServiceImpl.getInstance()
     account_id = redis.getValueByKey(token)
+    print("account_id", account_id)
 
     if not account_id:
         return None, False
 
     try:
+        print(1)
         user = AccountProfile.objects.get(account__id=account_id)
+        print(2)
         is_admin = user.get_role() == RoleType.ADMIN
+        print(3)
         return int(account_id), is_admin
     except AccountProfile.DoesNotExist:
         return None, False
