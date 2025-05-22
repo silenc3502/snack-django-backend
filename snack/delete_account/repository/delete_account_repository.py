@@ -21,10 +21,10 @@ class DeleteAccountRepository(ABC):
     def delete(self, deleted_account: DeletedAccount) -> None:
         pass
 
-    # @abstractmethod
-    # def deactivateAccount(self, account_id: int) -> bool:
-    #     pass
-    #
-    # @abstractmethod
-    # def deleteAccountById(self, account_id: int) -> bool:
-    #     pass
+    @abstractmethod
+    def deactivateAccount(self, account_id: int) -> bool:
+        pass
+
+    @abstractmethod
+    def deleteAccountById(self, account_id: int) -> bool:
+        pass
