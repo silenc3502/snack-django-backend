@@ -6,7 +6,7 @@ from delete_account.service.delete_account_service_impl import DeleteAccountServ
 
 class DeleteAccountController(viewsets.ViewSet):
     __deleteAccountService = DeleteAccountServiceImpl()
-   # __accountService = AccountServiceImpl.getInstance()
+    # __accountService = AccountServiceImpl.getInstance()
 
     @action(detail=False, methods=["post"])
     def deactivateAccount(self, request):

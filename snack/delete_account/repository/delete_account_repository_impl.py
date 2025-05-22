@@ -6,24 +6,24 @@ from account.entity.account import Account, AccountStatus
 
 
 class DeleteAccountRepositoryImpl(DeleteAccountRepository):
-    # # account_status만 변경
-    # def deactivateAccount(self, account_id: int) -> bool:
-    #     try:
-    #         account = Account.objects.get(id=account_id)
-    #         account.account_status = AccountStatus.DELETED.value
-    #         account.save(update_fields=['account_status'])
-    #         return True
-    #     except Account.DoesNotExist:
-    #         return False
-    #
-    # # 데이터 베이스에서 삭제
-    # def deleteAccountById(self, account_id: int) -> bool:
-    #     try:
-    #         account = Account.objects.get(id=account_id)
-    #         account.delete()
-    #         return True
-    #     except Account.DoesNotExist:
-    #         return False
+    # account_status만 변경
+    def deactivateAccount(self, account_id: int) -> bool:
+        try:
+            account = Account.objects.get(id=account_id)
+            account.account_status = AccountStatus.DELETED.value
+            account.save(update_fields=['account_status'])
+            return True
+        except Account.DoesNotExist:
+            return False
+
+    # 데이터 베이스에서 삭제
+    def deleteAccountById(self, account_id: int) -> bool:
+        try:
+            account = Account.objects.get(id=account_id)
+            account.delete()
+            return True
+        except Account.DoesNotExist:
+            return False
 
     def save(self, account_id: int) -> DeletedAccount:
         deleted_account = DeletedAccount(account_id=account_id)
