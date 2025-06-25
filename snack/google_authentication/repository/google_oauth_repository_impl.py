@@ -13,6 +13,7 @@ class GoogleOauthRepositoryImpl(GoogleOauthRepository):
             cls.__instance.clientId = settings.GOOGLE['CLIENT_ID']
             cls.__instance.clientSecret = settings.GOOGLE['CLIENT_SECRET']
             cls.__instance.redirectUri = settings.GOOGLE['REDIRECT_URI']
+            cls.__instance.redirectUri = settings.GOOGLE['REDIRECT_URI_FOR_APP']
             cls.__instance.tokenRequestUri = settings.GOOGLE['TOKEN_REQUEST_URI']
             cls.__instance.userInfoRequestUri = settings.GOOGLE['USER_INFO_REQUEST_URI']
 

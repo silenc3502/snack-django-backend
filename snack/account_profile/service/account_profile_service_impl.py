@@ -19,16 +19,21 @@ class AccountProfileServiceImpl(AccountProfileService):
 
     def createAccountProfile(
         self, account_id: int, account_name: str, account_nickname: str, phone_num: str,
-        account_add: str, account_sex: str, account_birth: str, account_pay: dict, account_sub: bool, account_age: int = None
+        account_add: str, account_sex: str, account_birth: str, account_pay: dict, account_sub: bool,
+            alarm_board_status: bool,alarm_comment_status: bool, account_age: int = None
     ) -> AccountProfile:
         """새로운 AccountProfile을 생성한다."""
         profile = AccountProfile(
             account_id=account_id, account_name=account_name, account_nickname=account_nickname,
             phone_num=phone_num, account_add=account_add, account_sex=account_sex,
             account_birth=account_birth, account_pay=account_pay, account_sub=account_sub,
+            alarm_board_status=alarm_board_status, alarm_comment_status=alarm_comment_status,
             account_age=str(account_age) if account_age is not None else None,
         )
         return self.__repository.save(profile)
+
+    def getProfileObjectByAccountId(self, account_id: int):
+        return self.__repository.findByAccountProfileObject(account_id)
 
     def getProfileByAccountId(self, account_id: int) -> dict:
         """Account ID로 프로필을 찾는다."""
@@ -46,7 +51,7 @@ class AccountProfileServiceImpl(AccountProfileService):
         from account.service.account_service_impl import AccountServiceImpl
         accountService = AccountServiceImpl.getInstance()
         account = accountService.findAccountById(account_id)
-        is_google_user = account.account_path == "google"
+        is_google_user = account.account_path.lower() == "google"
 
         # 수정 가능 항목만 업데이트
         if "account_nickname" in update_data:
@@ -57,6 +62,10 @@ class AccountProfileServiceImpl(AccountProfileService):
             profile.account_pay = update_data["account_pay"]
         if "account_sub" in update_data:
             profile.account_sub = update_data["account_sub"]
+        if "alarm_board_status" in update_data:
+            profile.alarm_board_status = update_data["alarm_board_status"]
+        if "alarm_comment_status" in update_data:
+            profile.alarm_comment_status = update_data["alarm_comment_status"]
 
         # Google 사용자만 수정 가능 항목
         if is_google_user:
@@ -67,3 +76,11 @@ class AccountProfileServiceImpl(AccountProfileService):
 
         return self.__repository.save(profile)
 
+    def isNicknameAvailable(self, account_nickname: str) -> bool:
+        return not AccountProfile.objects.filter(account_nickname=account_nickname).exists()
+
+    def updateBoardAlarmStatus(self, account_id: int, alarm_board_status: bool):
+        return self.__repository.saveBoardAlarmStatus(account_id, alarm_board_status)
+
+    def updateCommentAlarmStatus(self, account_id: int, alarm_comment_status: bool):
+        return self.__repository.saveCommentAlarmStatus(account_id, alarm_comment_status)

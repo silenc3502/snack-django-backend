@@ -46,3 +46,8 @@ class CommentRepositoryImpl(CommentRepository):
             comment.delete()
             return True
         return False
+
+    def findRepliesByParent(self, parent, author):
+        result = Comment.objects.filter(parent=parent).exclude(author=author)
+        return result
+

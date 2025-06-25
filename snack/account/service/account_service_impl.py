@@ -1,9 +1,12 @@
 from django.core.exceptions import ObjectDoesNotExist
 from account.repository.account_repository_impl import AccountRepositoryImpl
 from account.service.account_service import AccountService
-from account.entity.account import Account
+from account.entity.account import Account, AccountStatus
 from account.entity.account_role_type import AccountRoleType
 from account.entity.role_type import RoleType
+from rest_framework.response import Response
+from datetime import datetime, timedelta
+from django.utils.timezone import now
 
 class AccountServiceImpl(AccountService):
     __instance = None
@@ -38,6 +41,22 @@ class AccountServiceImpl(AccountService):
             return account
         return None
 
+    def checkAccountStatus(self, account):
+        """계정 상태 확인 및 처리"""
+        if account is None:
+            return None, None  # 계정이 존재하지 않음
+
+        if account.account_status == 1:  # Suspended (정지된 계정)
+            return None, "SUSPENDED"
+
+        elif account.account_status == 2:  # 탈퇴 회원 (재가입 처리)
+            return None, None
+
+        elif account.account_status == 4:  # Banned (영구 정지)
+            return None, "BANNED"
+
+        return account, None  # 정상 계정 (활성)
+
     def findAccountById(self, account_id: int) -> Account:
         """Account ID로 계정을 찾는다."""
         return self.__accountRepository.findById(account_id)
@@ -55,9 +74,8 @@ class AccountServiceImpl(AccountService):
         """가입된 경로와 로그인 시도 경로가 다르면 충돌 발생"""
         existing_account = self.__accountRepository.findByEmail(email)
         account_path_str = getattr(existing_account, 'account_path', 'None')
-        print(f"⚡ 기존 가입된 account_path: {account_path_str}")
 
-        
+        print(f"⚡ 기존 가입된 account_path: {account_path_str}")
         print(f"🔍 checkAccountPath() - email: {email}, login_path: {login_path}")
         
 
@@ -76,19 +94,21 @@ class AccountServiceImpl(AccountService):
         return True
 
 
-    def deactivate_account(self, account_id: int) -> bool:
+    def deactivateAccount(self, account_id: int) -> bool:   # 휴면 계정 비활성화
         try:
             account = Account.objects.get(id=account_id)
-            account.is_active = False
+            account.account_status = AccountStatus.SUSPENDED.value
             account.save()
             return True
         except Account.DoesNotExist:
             return False
 
-    def deleteAccountById(self, account_id: int) -> bool:
+    def deleteAccountById(self, account_id: int) -> bool:    # 휴면 계정 삭제
         try:
             account = Account.objects.get(id=account_id)
             account.delete()
             return True
         except Account.DoesNotExist:
             return False
+
+

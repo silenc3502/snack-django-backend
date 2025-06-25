@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from account.entity.account import Account
+from account.entity.account import Account, AccountStatus
 from account.entity.account_role_type import AccountRoleType
 from account.entity.role_type import RoleType
 from account.repository.account_repository import AccountRepository

@@ -2,7 +2,7 @@ import random
 import uuid
 
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.status import HTTP_200_OK
@@ -34,7 +34,7 @@ class KakaoOauthController(viewsets.ViewSet):
         try:
             tokenResponse = self.kakaoOauthService.requestAccessToken(code)
             accessToken = tokenResponse['access_token']
-
+            # accessToken = request.data.get('access_token') # AAA 포스트맨 확인용, 삭제
             with transaction.atomic():
                 userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
                 email = userInfo.get('kakao_account', {}).get('email', '')
@@ -48,6 +48,9 @@ class KakaoOauthController(viewsets.ViewSet):
                 birthday = userInfo.get('kakao_account', {}).get('birthday', '')
                 payment = ""
                 subscribed = False
+                alarm_board_status = True
+                alarm_comment_status = True
+
 
                 birth = None
                 if birthday and birthyear:
@@ -55,37 +58,94 @@ class KakaoOauthController(viewsets.ViewSet):
                         birth = datetime.strptime(f"{birthyear}-{birthday}", "%Y-%m-%d").date()
                     except ValueError:
                         birth = None
+
                 conflict_message = self.accountService.checkAccountPath(email, account_path)
-                print(f"✅ conflict_message: {conflict_message}")  # 👈 이 줄 추가
+                print(f" conflict_message: {conflict_message}")  #  이 줄 추가
                 if conflict_message:
                     return JsonResponse({'success': False, 'error_message': conflict_message}, status=409)
 
                 account = self.accountService.checkEmailDuplication(email)
+                account, status_message = self.accountService.checkAccountStatus(account)
+
+                if status_message:
+                    if "SUSPENDED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=414)
+                    elif "BANNED" in status_message:
+                        return JsonResponse({'success': False, 'error_message': status_message},status=444)
+
                 is_new_account = False
                 if account is None:
                     is_new_account = True
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, name, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
                 userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+                self.redisCacheService.storeKeyValue(userToken, account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
-                response['userToken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "userToken, account_id"
+                response['usertoken'] = userToken
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
+    def requestAccessTokenForApp(self, request): # flutter
+        code = request.GET.get('code')
+        if not code:
+            return JsonResponse({'error': 'code is required'}, status=400)
+
+        try:
+            tokenResponse = self.kakaoOauthService.requestAccessTokenForApp(code)
+            accessToken = tokenResponse['access_token']
+            print(f"[KAKAO] accessToken: {accessToken}")
+
+            with transaction.atomic():
+                userInfo = self.kakaoOauthService.requestUserInfo(accessToken)
+                print(f"[KAKAO] userInfo: {userInfo}")
+
+                kakaoAccount = userInfo.get('kakao_account', {})
+                email = kakaoAccount.get('email', '')
+                profile = kakaoAccount.get('profile', {})
+                nickname = profile.get('nickname', '')
+
+                account = self.accountService.checkEmailDuplication(email)
+                if account is None:
+                    account = self.accountService.createAccount(email)
+                    self.accountProfileService.createAccountProfile(
+                        account.getId(), nickname
+                    )
+
+                userToken = self.__createUserTokenWithAccessToken(account, accessToken)
+
+                return HttpResponse(f"""
+                    <html>
+                      <body>
+                        <script>
+                          const userToken = '{userToken}';
+                          const email = '{email}';
+                          const nickname = '{nickname}';
+                          window.location.href = 'flutter://kakao-login-success?userToken=' + encodeURIComponent(userToken) + '&email=' + encodeURIComponent(email) + '&nickname=' + encodeURIComponent(nickname);
+                        </script>
+                      </body>
+                    </html>
+                """)
+
+        except Exception as e:
+            print(f"[KAKAO] Error: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+
     def requestUserToken(self, request):
         access_token = request.data.get('access_token')
         email = request.data.get('email')
+        nickname = request.data.get('nickname')
         account_path = "Kakao"
         role_type = RoleType.USER
         phone_num = request.data.get('phone_num', "")
@@ -95,6 +155,8 @@ class KakaoOauthController(viewsets.ViewSet):
         birthday = request.data.get('birthday', "")
         payment = request.data.get('payment', "")
         subscribed = request.data.get('subscribed', False)
+        alarm_board_status = request.data.get('alarm_board_status', True)
+        alarm_comment_status = request.data.get('alarm_comment_status', True)
 
         birth = None
         if birthday and birthyear:
@@ -121,7 +183,7 @@ class KakaoOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed
+                        account.id, nickname, nickname, phone_num, address, gender, birth, payment, subscribed, alarm_board_status, alarm_comment_status
                     )
 
                 self.accountService.updateLastUsed(account.id)
@@ -130,7 +192,8 @@ class KakaoOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['userToken'] = userToken
-                response['account_id'] = account.id
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:

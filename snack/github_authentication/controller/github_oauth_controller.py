@@ -63,9 +63,6 @@ class GithubOauthController(viewsets.ViewSet):
                 github_login_name = userInfo.get('login', '')
                 print(f"✅ github login: {github_login_name}")
 
-                userToken = f"github-{uuid.uuid4()}"
-                self.redisCacheService.storeKeyValue(userToken, email)
-
                 account = self.accountService.checkEmailDuplication(email)
                 if account:
                     conflict_message = self.accountService.checkAccountPath(email, account_path)
@@ -78,7 +75,7 @@ class GithubOauthController(viewsets.ViewSet):
                     account = self.accountService.createAccount(email, account_path, role_type)
                     nickname = self.__generateUniqueNickname()
                     self.accountProfileService.createAccountProfile(
-                        account.id, github_login_name, nickname, "", "", "", None, "", False
+                        account.id, github_login_name, nickname, "", "", "", None, "", False, True, True
                     )
 
 
@@ -95,15 +92,20 @@ class GithubOauthController(viewsets.ViewSet):
                     print("Redis 저장 오류:", e)
                     return JsonResponse({'error': str(e)}, status=500)
 
+                userToken = f"github-{uuid.uuid4()}"
+                self.redisCacheService.storeKeyValue(userToken, account.id)
+                self.redisCacheService.storeKeyValue(account.id, accessToken)
+
+
                 self.accountService.updateLastUsed(account.id)
                 self.redisCacheService.storeKeyValue(account.email, account.id)
                 print(userToken)
                 print(account.id)
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
-                response['userToken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "userToken, account_id"
+                response['usertoken'] = userToken
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:
@@ -115,8 +117,8 @@ class GithubOauthController(viewsets.ViewSet):
     def validateAdminCode(self, request):
         """GitHub 로그인 후 관리자 권한 요청"""
         admin_code = request.data.get("admin_code")
-        user_token = request.headers.get("userToken")
-        account_id = request.headers.get("accountId")
+        user_token = request.headers.get("usertoken")
+        account_id = request.headers.get("account-id")
 
         print(f"🔍 admin_code: {admin_code}, user_token: {user_token}, account_id: {account_id}")
 

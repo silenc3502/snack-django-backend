@@ -2,7 +2,7 @@ from django.db import models
 from account.entity.account import Account
 from django.utils.timezone import now
 from datetime import date,datetime
-from utility.encryption import AESCipher
+from utility.encryption import AESCipher, is_encrypted
 aes = AESCipher()
 
 class AccountProfile(models.Model):
@@ -21,6 +21,8 @@ class AccountProfile(models.Model):
     account_pay = models.JSONField(null=True, blank=True)  # 결제 정보 (수정 가능)
     account_sub = models.BooleanField(default=False)  # 구독 여부 (수정 가능)
     account_age = models.CharField(max_length=100,null=True, blank=True)
+    alarm_board_status = models.BooleanField(default=True)  # 댓글 알림 허용 디폴트
+    alarm_comment_status = models.BooleanField(default=True)  # 대댓글 알림 허용 디폴트
 
     class Meta:
         db_table = 'account_profile'
@@ -50,7 +52,17 @@ class AccountProfile(models.Model):
         return self.account.role_type.role_type
     
     def save(self, *args, **kwargs):
-        self.account_age = self.get_age()
+
+        if self.account_birth:
+            try:
+                decrypted_birth = aes.decrypt(self.account_birth) if is_encrypted(self.account_birth) else self.account_birth
+                birth_date = datetime.strptime(decrypted_birth, "%Y-%m-%d").date()
+                today = date.today()
+                calculated_age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+                self.account_age = str(calculated_age)
+            except Exception as e:
+                print(f"[save] 생일 복호화 또는 나이 계산 실패: {e}")
+                self.account_age = None
 
         if self.account_name:
             try:
@@ -75,12 +87,6 @@ class AccountProfile(models.Model):
                 aes.decrypt(self.account_birth)
             except:
                 self.account_birth = aes.encrypt(str(self.account_birth))
-
-        if self.account_age:
-            try:
-                aes.decrypt(self.account_age)
-            except:
-                self.account_age = aes.encrypt(str(self.account_age))
 
         if self.account_pay:
             import json

@@ -26,3 +26,4 @@ class GoogleOauthServiceImpl(GoogleOauthService):
 
     def requestUserInfo(self, accessToken):
         return self.__googleOauthRepository.getUserInfo(accessToken)
+

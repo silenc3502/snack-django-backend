@@ -23,9 +23,18 @@ class AccountService(ABC):
         pass
 
     @abstractmethod
-    def deactivate_account(self, account_id: int) -> bool:
+    def deactivateAccount(self, account_id: int) -> bool:
         pass
 
     @abstractmethod
     def deleteAccountById(self, account_id: int) -> bool:
         pass
+
+    @abstractmethod
+    def checkAccountPath(self, email: str, login_path: str):
+        pass
+
+    @abstractmethod
+    def updateRoleToAdmin(self, account_id):
+        pass
+
